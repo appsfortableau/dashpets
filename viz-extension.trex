@@ -15,7 +15,7 @@
     <!-- <context-menu>
       <configure-context-menu-item />
     </context-menu> -->
-    <encoding id="dimensions">
+    <encoding id="dimension">
       <display-name>Pets</display-name>
       <data-spec>
         <data-type>string</data-type>
