@@ -1,9 +1,9 @@
 import './style.css';
 import './utils/tableau.extensions.1.latest.min.js';
-import { openConfig } from './utils/tableau.js';
+import { getFieldsOnEncoding, getSummaryDataTable, openConfig } from './utils/tableau.js';
 
 tableau.extensions.initializeAsync({ configure: openConfig }).then(() => {
-  const worksheet = tableau.extensions.worksheetContent?.worksheet;
+  const worksheet = tableau.extensions.worksheetContent?.worksheet!;
   if (!worksheet) {
     return; // no worksheet
   }
@@ -17,7 +17,7 @@ tableau.extensions.initializeAsync({ configure: openConfig }).then(() => {
   canvas.height = window.innerHeight;
 
   async function updateDataAndRender() {
-    const fields = await getFieldsOnEncoding(tableau.extensions.worksheetContent.worksheet);
+    const fields = await getFieldsOnEncoding(worksheet);
     const data = await getSummaryDataTable(worksheet);
 
     // Pet data - define different pet types with unique images
