@@ -24,12 +24,13 @@ tableau.extensions.initializeAsync({ configure: openConfig }).then(() => {
 
     const fields = await getFieldsOnEncoding(worksheet);
     const data = await getSummaryDataTable(worksheet);
-
+    let selected = [];
     // Pet data - define different pet types with unique images
     const petTypes = {
       dog: {
         asset: 'dog',
         canFly: false,
+        speed: 1,
         aspectRatio: { x: 1, y: 0.66 },
         walk: ['walk1.gif', 'walk2.gif', 'walk3.gif', 'walk4.gif', 'walk5.gif', 'walk6.gif', 'walk7.gif'],
         run: ['walk1.gif', 'walk2.gif', 'walk3.gif', 'walk4.gif', 'walk5.gif', 'walk6.gif', 'walk7.gif'],
@@ -39,6 +40,7 @@ tableau.extensions.initializeAsync({ configure: openConfig }).then(() => {
       chicken: {
         asset: 'chicken',
         canFly: false,
+        speed: 0.6,
         aspectRatio: { x: 0.85, y: 1 },
         walk: ['walk1.gif', 'walk2.gif', 'walk3.gif'],
         run: ['run1.gif', 'run2.gif', 'run3.gif'],
@@ -48,15 +50,17 @@ tableau.extensions.initializeAsync({ configure: openConfig }).then(() => {
       cat: {
         asset: 'cat',
         canFly: false,
+        speed: 1.5,
         aspectRatio: { x: 1, y: 0.92 },
         walk: ['walk1.gif', 'walk2.gif'],
         run: ['walk1.gif', 'walk2.gif'],
-        sit: ['sit1.gif', 'sit2.gif', 'sit3.gif'],
-        sleep: ['sit1.gif'],
+        sit: ['sit1.png'],
+        sleep: ['sleep1.png', 'sleep2.png'],
       },
       bird: {
         asset: 'bird',
         canFly: true,
+        speed: 1,
         aspectRatio: { x: 1, y: 0.92 },
         walk: ['walk.gif'],
         run: ['walk.gif'],
@@ -66,6 +70,7 @@ tableau.extensions.initializeAsync({ configure: openConfig }).then(() => {
       crab: {
         asset: 'crab',
         canFly: false,
+        speed: 0.3,
         aspectRatio: { x: 1, y: 0.76 },
         walk: ['walk1.gif', 'walk2.gif', 'walk3.gif', 'walk4.gif', 'walk5.gif'],
         run: ['walk1.gif', 'walk2.gif', 'walk3.gif', 'walk4.gif', 'walk5.gif'],
@@ -85,6 +90,8 @@ tableau.extensions.initializeAsync({ configure: openConfig }).then(() => {
       'I love SuperTables!',
       'WriteBackExtreme is cool 😎',
       'My Sales is above target!',
+      'I love Apps for Tableau 😍',
+      'VizExtensions Woofs!',
       '🐾',
       'Keep going!',
       'Did you feed me today?',
@@ -134,15 +141,16 @@ tableau.extensions.initializeAsync({ configure: openConfig }).then(() => {
       return petTypes[randomKey];
     }
 
-    function createPet(x, y) {
+    function createPet(name, x, y) {
       let randomSize = Math.random();
       const petType = getRandomPetType();
       const pet = {
+        name: name,
         x: x,
         y: y - (useRandomSize ? randomSize * 50 : 50) * petType.aspectRatio.y,
         width: (useRandomSize ? randomSize * 50 : 50) * petType.aspectRatio.x,
         height: (useRandomSize ? randomSize * 50 : 50) * petType.aspectRatio.y,
-        speed: 1,
+        speed: petType.speed,
         canFly: petType.canFly,
         animationFrame: 0,
         state: 'walk',
@@ -170,12 +178,12 @@ tableau.extensions.initializeAsync({ configure: openConfig }).then(() => {
     }
 
     // Create each pet from petsData and add to pets array
-    petsData.forEach((_, index) => {
+    petsData.forEach((name, index) => {
       let pet;
       if (useYcoords) {
-        pet = createPet(Math.random() * canvas.width, Math.random() * canvas.height);
+        pet = createPet(name, Math.random() * canvas.width, Math.random() * canvas.height);
       } else {
-        pet = createPet(Math.random() * canvas.width, canvas.height);
+        pet = createPet(name, Math.random() * canvas.width, canvas.height);
       }
       pets.push(pet);
     });
@@ -288,8 +296,8 @@ tableau.extensions.initializeAsync({ configure: openConfig }).then(() => {
         if (pet.selected) {
           // Draw a black border around the pet
           ctx.strokeStyle = 'black';
-          ctx.lineWidth = 2;
-          ctx.strokeRect(pet.x - 2, pet.y - 2, pet.width + 4, pet.height + 4);
+          ctx.lineWidth = 1;
+          ctx.strokeRect(pet.x - 1, pet.y - 1, pet.width + 2, pet.height + 2);
         }
         ctx.save();
 
@@ -367,7 +375,23 @@ tableau.extensions.initializeAsync({ configure: openConfig }).then(() => {
         // Check if the click is within the pet's bounding box
         if (clickX >= pet.x && clickX <= pet.x + pet.width && clickY >= pet.y && clickY <= pet.y + pet.height) {
           pet.selected = !pet.selected; // Toggle selection
-          console.log('DASHBOARD ACTIONS ADD HERE:', pet); // Log something
+          if (pet.selected) {
+            selected.push(pet.name);
+            worksheet.selectMarksByValueAsync(
+              [{ fieldName: fields[0], value: selected }],
+              window.tableau.SelectionUpdateType.Replace
+            );
+          } else {
+            selected.findIndex((val) => val === pet.name);
+            selected.splice(
+              selected.findIndex((val) => val === pet.name),
+              1
+            );
+            worksheet.selectMarksByValueAsync(
+              [{ fieldName: fields[0], value: selected }],
+              window.tableau.SelectionUpdateType.Replace
+            );
+          }
         }
       });
     });
