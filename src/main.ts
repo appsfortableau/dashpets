@@ -62,7 +62,41 @@ tableau.extensions.initializeAsync({ configure: openConfig }).then(() => {
       '👋', // wave hand emoji
       'Hello!',
       'I love SuperTables!',
+      'WriteBackExtreme is cool 😎',
       'My Sales is above target!',
+      '🐾',
+      'Keep going!',
+      'Did you feed me today?',
+      'I need a nap. 💤',
+      'What a beautiful day! ☀️',
+      'Where’s my treat? 🍖',
+      'I saw a bird earlier. 🐦',
+      'Can we play fetch? 🎾',
+      'Life is pawsome! 🐕',
+      'I’m fur-tastic!',
+      'Let’s go for a walk! 🚶‍♂️',
+      'My tail is the best thing ever. 🐕',
+      'What’s for dinner? 🍗',
+      'Did you see my cool trick? 🤸',
+      'I’m thinking… 🤔',
+      'Let’s chase squirrels! 🐿️',
+      'Can I get a belly rub? 🙃',
+      'Is it snack time yet? 🍪',
+      'Look at me, I’m adorable! 😍',
+      'I love being your pet! 💖',
+      'Did you hear that noise? 👂',
+      'Adventure time! 🗺️',
+      'Can I have some cheese? 🧀',
+      'Zoomies incoming! 🌀',
+      'I’m on patrol! 👮',
+      'Everything’s better with pets. 🐾',
+      'I’m a good pet! 🥰',
+      'Tail wags for everyone! 🐕',
+      'Oops, I got distracted. 🐾',
+      'Sunbathing is my favorite hobby. ☀️',
+      'I’m watching you. 👀',
+      'What’s that smell? 👃',
+      'Nap time is calling! 🛌',
     ];
 
     function loadImage(src, petType) {
@@ -127,9 +161,11 @@ tableau.extensions.initializeAsync({ configure: openConfig }).then(() => {
       // Tooltip logic
       pet.tooltipTimer += deltaTime;
 
+      const globalTooltipFactor = Math.max(1, pets.length); // Prevent division by zero
+      const tooltipChance = 0.2 / globalTooltipFactor;
       // Check if it's time to show a new tooltip
       if (pet.tooltipTimer >= pet.tooltipCooldown) {
-        if (Math.random() < 0.1) {
+        if (Math.random() < tooltipChance) {
           // 30% chance to say something
           pet.tooltip = messages[Math.floor(Math.random() * messages.length)];
         } else {
