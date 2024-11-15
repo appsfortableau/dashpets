@@ -58,6 +58,12 @@ tableau.extensions.initializeAsync({ configure: openConfig }).then(() => {
       return row[0].value;
     });
     const pets = []; // Array to hold pet objects
+    const messages = [
+      '👋', // wave hand emoji
+      'Hello!',
+      'I love SuperTables!',
+      'My Sales is above target!',
+    ];
 
     function loadImage(src, petType) {
       const img = new Image();
@@ -98,6 +104,9 @@ tableau.extensions.initializeAsync({ configure: openConfig }).then(() => {
         animationDelay: 300,
         idleTime: 0,
         idleTimeLimit: Math.random() * 2000 + 2000,
+        tooltip: '', // Tooltip text
+        tooltipTimer: 0, // Timer for showing a new message
+        tooltipCooldown: Math.random() * 20000 + 5000,
       };
       pet.currentImage = pet.images.walk[0]; // Default to first walking image
       return pet;
@@ -115,6 +124,21 @@ tableau.extensions.initializeAsync({ configure: openConfig }).then(() => {
     });
 
     function updatePet(pet, deltaTime) {
+      // Tooltip logic
+      pet.tooltipTimer += deltaTime;
+
+      // Check if it's time to show a new tooltip
+      if (pet.tooltipTimer >= pet.tooltipCooldown) {
+        if (Math.random() < 0.1) {
+          // 30% chance to say something
+          pet.tooltip = messages[Math.floor(Math.random() * messages.length)];
+        } else {
+          pet.tooltip = ''; // Otherwise, clear the tooltip
+        }
+        pet.tooltipTimer = 0;
+        pet.tooltipCooldown = Math.random() * 3000 + 1000; // Random cooldown (5-25 seconds)
+      }
+
       if (pet.hover) {
         pet.idleTime = 0;
         return;
@@ -126,10 +150,10 @@ tableau.extensions.initializeAsync({ configure: openConfig }).then(() => {
         if (random < 0.3) {
           pet.state = 'sit';
           pet.currentImage = pet.images.sit;
-        } else if (random < 0.5) {
+        } else if (random < 0.4) {
           pet.state = 'sleep';
           pet.currentImage = pet.images.sleep;
-        } else if (random < 0.6) {
+        } else if (random < 0.5) {
           pet.state = 'run';
           pet.speed = 3;
         } else {
@@ -177,6 +201,27 @@ tableau.extensions.initializeAsync({ configure: openConfig }).then(() => {
       }
     }
 
+    function drawTooltip(pet) {
+      if (pet.tooltip) {
+        ctx.font = '10px Monocraft';
+        ctx.fillStyle = 'white';
+
+        const textWidth = ctx.measureText(pet.tooltip).width;
+        const tooltipX = pet.x + pet.width / 2 - textWidth / 2 - 10;
+        const tooltipY = pet.y - 30;
+
+        // Pixelated border
+        ctx.fillStyle = 'black';
+        ctx.fillRect(tooltipX - 2, tooltipY - 2, textWidth + 24, 24); // Outer border
+        ctx.fillStyle = 'white';
+        ctx.fillRect(tooltipX, tooltipY, textWidth + 20, 20); // Inner box
+
+        // Tooltip text
+        ctx.fillStyle = 'black';
+        ctx.fillText(pet.tooltip, tooltipX + 10, tooltipY + 15);
+      }
+    }
+
     function drawPet(pet) {
       if (pet.currentImage && pet.currentImage.complete) {
         ctx.save();
@@ -191,6 +236,8 @@ tableau.extensions.initializeAsync({ configure: openConfig }).then(() => {
 
         ctx.restore();
       }
+
+      drawTooltip(pet);
     }
 
     function gameLoop() {
