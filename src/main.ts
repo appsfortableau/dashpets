@@ -17,6 +17,8 @@ tableau.extensions.initializeAsync({ configure: openConfig }).then(() => {
   canvas.height = window.innerHeight;
 
   async function updateDataAndRender() {
+    // set to true to use the Y axis as well
+    let useYcoords = true;
     const fields = await getFieldsOnEncoding(worksheet);
     const data = await getSummaryDataTable(worksheet);
 
@@ -66,14 +68,15 @@ tableau.extensions.initializeAsync({ configure: openConfig }).then(() => {
       const petType = getRandomPetType();
       const pet = {
         x: x,
-        y: canvas.height - 50,
+        y: y,
         width: 50,
         height: 50,
         speed: 1,
         animationFrame: 0,
         state: 'walk',
         hover: false,
-        direction: Math.random() < 0.5 ? -1 : 1,
+        directionX: Math.random() < 0.5 ? -1 : 1,
+        directionY: Math.random() < 0.5 ? -1 : 1,
         images: {
           walk: petType.walk.map((src) => loadImage(src)),
           run: petType.run.map((src) => loadImage(src)),
@@ -92,7 +95,12 @@ tableau.extensions.initializeAsync({ configure: openConfig }).then(() => {
 
     // Create each pet from petsData and add to pets array
     petsData.forEach((_, index) => {
-      const pet = createPet((index + 1) * 100, canvas.height - 50);
+      let pet;
+      if (useYcoords) {
+        pet = createPet(Math.random() * canvas.width, Math.random() * canvas.height);
+      } else {
+        pet = createPet(Math.random() * canvas.width, canvas.height - 50);
+      }
       pets.push(pet);
     });
 
@@ -118,7 +126,8 @@ tableau.extensions.initializeAsync({ configure: openConfig }).then(() => {
           pet.state = 'walk';
           pet.speed = 1;
         }
-        pet.direction = Math.random() < 0.5 ? -1 : 1;
+        pet.directionX = Math.random() < 0.5 ? -1 : 1;
+        pet.directionY = Math.random() < 0.5 ? -1 : 1;
         pet.idleTime = 0;
       }
 
@@ -132,16 +141,29 @@ tableau.extensions.initializeAsync({ configure: openConfig }).then(() => {
       }
 
       if (pet.state === 'walk' || pet.state === 'run') {
-        pet.x += pet.speed * pet.direction;
+        pet.x += pet.speed * pet.directionX;
+        if (useYcoords) {
+          pet.y += pet.speed * pet.directionY;
+        }
       }
 
       if (pet.x <= 0) {
         pet.x = 0;
-        pet.direction = 1;
+        pet.directionX = 1;
       }
       if (pet.x + pet.width >= canvas.width) {
         pet.x = canvas.width - pet.width;
-        pet.direction = -1;
+        pet.directionX = -1;
+      }
+      if (useYcoords) {
+        if (pet.y <= 0) {
+          pet.y = 0;
+          pet.directionY = 1;
+        }
+        if (pet.y + pet.height >= canvas.height) {
+          pet.y = canvas.height - pet.height;
+          pet.directionY = -1;
+        }
       }
     }
 
@@ -149,7 +171,7 @@ tableau.extensions.initializeAsync({ configure: openConfig }).then(() => {
       if (pet.currentImage && pet.currentImage.complete) {
         ctx.save();
 
-        if (pet.direction === -1) {
+        if (pet.directionX === -1) {
           ctx.translate(pet.x + pet.width, pet.y);
           ctx.scale(-1, 1);
           ctx.drawImage(pet.currentImage, 0, 0, pet.width, pet.height);
