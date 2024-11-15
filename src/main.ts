@@ -18,7 +18,7 @@ tableau.extensions.initializeAsync({ configure: openConfig }).then(() => {
 
   async function updateDataAndRender() {
     // set to true to use the Y axis as well
-    let useYcoords = false;
+    let useYcoords = true;
     // just for fun for now, lets change it to a measure of Tableau
     let useRandomSize = false;
 
@@ -27,16 +27,16 @@ tableau.extensions.initializeAsync({ configure: openConfig }).then(() => {
     let selected = [];
     // Pet data - define different pet types with unique images
     const petTypes = {
-      dog: {
-        asset: 'dog',
-        canFly: false,
-        speed: 1,
-        aspectRatio: { x: 1, y: 0.66 },
-        walk: ['walk1.gif', 'walk2.gif', 'walk3.gif', 'walk4.gif', 'walk5.gif', 'walk6.gif', 'walk7.gif'],
-        run: ['walk1.gif', 'walk2.gif', 'walk3.gif', 'walk4.gif', 'walk5.gif', 'walk6.gif', 'walk7.gif'],
-        sit: ['walk1.gif'],
-        sleep: ['walk1.gif'],
-      },
+      // dog: {
+      //   asset: 'dog',
+      //   canFly: false,
+      //   speed: 1,
+      //   aspectRatio: { x: 1, y: 0.66 },
+      //   walk: ['walk1.gif', 'walk2.gif', 'walk3.gif', 'walk4.gif', 'walk5.gif', 'walk6.gif', 'walk7.gif'],
+      //   run: ['walk1.gif', 'walk2.gif', 'walk3.gif', 'walk4.gif', 'walk5.gif', 'walk6.gif', 'walk7.gif'],
+      //   sit: ['walk1.gif'],
+      //   sleep: ['walk1.gif'],
+      // },
       chicken: {
         asset: 'chicken',
         canFly: false,
@@ -57,16 +57,16 @@ tableau.extensions.initializeAsync({ configure: openConfig }).then(() => {
         sit: ['sit1.png'],
         sleep: ['sleep1.png', 'sleep2.png'],
       },
-      bird: {
-        asset: 'bird',
-        canFly: true,
-        speed: 1,
-        aspectRatio: { x: 1, y: 0.92 },
-        walk: ['walk.gif'],
-        run: ['walk.gif'],
-        sit: ['walk.gif'],
-        sleep: ['walk.gif'],
-      },
+      // bird: {
+      //   asset: 'bird',
+      //   canFly: true,
+      //   speed: 1,
+      //   aspectRatio: { x: 1, y: 0.92 },
+      //   walk: ['walk.gif'],
+      //   run: ['walk.gif'],
+      //   sit: ['walk.gif'],
+      //   sleep: ['walk.gif'],
+      // },
       crab: {
         asset: 'crab',
         canFly: false,
@@ -76,6 +76,36 @@ tableau.extensions.initializeAsync({ configure: openConfig }).then(() => {
         run: ['walk1.gif', 'walk2.gif', 'walk3.gif', 'walk4.gif', 'walk5.gif'],
         sit: ['walk1.gif'],
         sleep: ['walk1.gif'],
+      },
+      shark: {
+        asset: 'shark',
+        canFly: false,
+        speed: 0.3,
+        aspectRatio: { x: 1, y: 0.225 },
+        walk: ['walk1.png'],
+        run: ['run1.png'],
+        sit: ['walk1.png'],
+        sleep: ['walk1.png'],
+      },
+      guineapig: {
+        asset: 'guineapig',
+        canFly: false,
+        speed: 0.1,
+        aspectRatio: { x: 1, y: 0.56 },
+        walk: ['walk1.png', 'sit1.png'],
+        run: ['walk1.png', 'sit1.png'],
+        sit: ['sit1.png'],
+        sleep: ['sleep1.png'],
+      },
+      rat: {
+        asset: 'rat',
+        canFly: false,
+        speed: 1,
+        aspectRatio: { x: 1, y: 0.56 },
+        walk: ['walk1.png'],
+        run: ['walk1.png'],
+        sit: ['sit1.png'],
+        sleep: ['sleep1.png'],
       },
     };
 
