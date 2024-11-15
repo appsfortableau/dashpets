@@ -208,16 +208,28 @@ tableau.extensions.initializeAsync({ configure: openConfig }).then(() => {
       const rect = canvas.getBoundingClientRect();
       const mouseX = e.clientX - rect.left;
       const mouseY = e.clientY - rect.top;
-
+      let hoveringPet = false;
       pets.forEach((pet, index) => {
+        let tooltipAlreadyActive = false;
+        if (pet.hover) {
+          tooltipAlreadyActive = true;
+        }
         pet.hover = mouseX >= pet.x && mouseX <= pet.x + pet.width && mouseY >= pet.y && mouseY <= pet.y + pet.height;
         if (pet.hover) {
-          const myHoveredTuple = index + 1;
-          window?.tableau?.extensions?.worksheetContent?.worksheet.hoverTupleAsync(myHoveredTuple, {
-            tooltipAnchorPoint: { x: mouseX, y: mouseY + 100 },
-          });
+          hoveringPet = true;
+          if (!tooltipAlreadyActive) {
+            const myHoveredTuple = index + 1;
+            window?.tableau?.extensions?.worksheetContent?.worksheet.hoverTupleAsync(myHoveredTuple, {
+              tooltipAnchorPoint: { x: mouseX, y: mouseY + 100 },
+            });
+          }
         }
       });
+      if (!hoveringPet) {
+        window?.tableau?.extensions?.worksheetContent?.worksheet.hoverTupleAsync(99999999999, {
+          tooltipAnchorPoint: { x: mouseX, y: mouseY + 100 },
+        });
+      }
     });
 
     canvas.addEventListener('mouseleave', () => {
