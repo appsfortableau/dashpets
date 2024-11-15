@@ -29,6 +29,7 @@ tableau.extensions.initializeAsync({ configure: openConfig }).then(() => {
     const petTypes = {
       dog: {
         asset: 'dog',
+        canFly: false,
         aspectRatio: { x: 1, y: 0.66 },
         walk: ['walk1.gif', 'walk2.gif', 'walk3.gif', 'walk4.gif', 'walk5.gif', 'walk6.gif', 'walk7.gif'],
         run: ['walk1.gif', 'walk2.gif', 'walk3.gif', 'walk4.gif', 'walk5.gif', 'walk6.gif', 'walk7.gif'],
@@ -37,6 +38,7 @@ tableau.extensions.initializeAsync({ configure: openConfig }).then(() => {
       },
       chicken: {
         asset: 'chicken',
+        canFly: false,
         aspectRatio: { x: 0.85, y: 1 },
         walk: ['walk1.gif', 'walk2.gif', 'walk3.gif'],
         run: ['run1.gif', 'run2.gif', 'run3.gif'],
@@ -45,14 +47,25 @@ tableau.extensions.initializeAsync({ configure: openConfig }).then(() => {
       },
       cat: {
         asset: 'cat',
+        canFly: false,
         aspectRatio: { x: 1, y: 0.92 },
         walk: ['walk1.gif', 'walk2.gif'],
         run: ['walk1.gif', 'walk2.gif'],
         sit: ['sit1.gif', 'sit2.gif', 'sit3.gif'],
         sleep: ['sit1.gif'],
       },
+      bird: {
+        asset: 'bird',
+        canFly: true,
+        aspectRatio: { x: 1, y: 0.92 },
+        walk: ['walk.gif'],
+        run: ['walk.gif'],
+        sit: ['walk.gif'],
+        sleep: ['walk.gif'],
+      },
       crab: {
         asset: 'crab',
+        canFly: false,
         aspectRatio: { x: 1, y: 0.76 },
         walk: ['walk1.gif', 'walk2.gif', 'walk3.gif', 'walk4.gif', 'walk5.gif'],
         run: ['walk1.gif', 'walk2.gif', 'walk3.gif', 'walk4.gif', 'walk5.gif'],
@@ -130,6 +143,7 @@ tableau.extensions.initializeAsync({ configure: openConfig }).then(() => {
         width: (useRandomSize ? randomSize * 50 : 50) * petType.aspectRatio.x,
         height: (useRandomSize ? randomSize * 50 : 50) * petType.aspectRatio.y,
         speed: 1,
+        canFly: petType.canFly,
         animationFrame: 0,
         state: 'walk',
         hover: false,
@@ -223,7 +237,7 @@ tableau.extensions.initializeAsync({ configure: openConfig }).then(() => {
 
       if (pet.state === 'walk' || pet.state === 'run') {
         pet.x += pet.speed * pet.directionX;
-        if (useYcoords) {
+        if (useYcoords || pet.canFly) {
           pet.y += pet.speed * pet.directionY;
         }
       }
@@ -236,7 +250,7 @@ tableau.extensions.initializeAsync({ configure: openConfig }).then(() => {
         pet.x = canvas.width - pet.width;
         pet.directionX = -1;
       }
-      if (useYcoords) {
+      if (useYcoords || pet.canFly) {
         if (pet.y <= 0) {
           pet.y = 0;
           pet.directionY = 1;
