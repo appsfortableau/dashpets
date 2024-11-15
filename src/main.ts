@@ -18,9 +18,9 @@ tableau.extensions.initializeAsync({ configure: openConfig }).then(() => {
 
   async function updateDataAndRender() {
     // set to true to use the Y axis as well
-    let useYcoords = true;
+    let useYcoords = false;
     // just for fun for now, lets change it to a measure of Tableau
-    let useRandomSize = true;
+    let useRandomSize = false;
 
     const fields = await getFieldsOnEncoding(worksheet);
     const data = await getSummaryDataTable(worksheet);
@@ -28,22 +28,28 @@ tableau.extensions.initializeAsync({ configure: openConfig }).then(() => {
     // Pet data - define different pet types with unique images
     const petTypes = {
       dog: {
+        asset: 'dog',
+        aspectRatio: { x: 1, y: 0.66 },
+        walk: ['walk1.gif', 'walk2.gif', 'walk3.gif', 'walk4.gif', 'walk5.gif', 'walk6.gif', 'walk7.gif'],
+        run: ['walk1.gif', 'walk2.gif', 'walk3.gif', 'walk4.gif', 'walk5.gif', 'walk6.gif', 'walk7.gif'],
+        sit: 'walk1.gif',
+        sleep: 'walk1.gif',
+      },
+      chicken: {
+        asset: 'chicken',
+        aspectRatio: { x: 0.85, y: 1 },
         walk: ['walk1.gif', 'walk2.gif', 'walk3.gif'],
         run: ['run1.gif', 'run2.gif', 'run3.gif'],
         sit: 'sit.gif',
         sleep: 'sleep.gif',
       },
-      cat: {
-        walk: ['walk1.gif', 'walk2.gif', 'walk3.gif'],
-        run: ['run1.gif', 'run2.gif', 'run3.gif'],
-        sit: 'sit.gif',
-        sleep: 'sleep.gif',
-      },
-      parrot: {
-        walk: ['walk1.gif', 'walk2.gif', 'walk3.gif'],
-        run: ['run1.gif', 'run2.gif', 'run3.gif'],
-        sit: 'sit.gif',
-        sleep: 'sleep.gif',
+      crab: {
+        asset: 'crab',
+        aspectRatio: { x: 1, y: 0.76 },
+        walk: ['walk1.gif', 'walk2.gif', 'walk3.gif', 'walk4.gif', 'walk5.gif'],
+        run: ['walk1.gif', 'walk2.gif', 'walk3.gif', 'walk4.gif', 'walk5.gif'],
+        sit: 'walk1.gif',
+        sleep: 'walk1.gif',
       },
     };
 
@@ -53,10 +59,10 @@ tableau.extensions.initializeAsync({ configure: openConfig }).then(() => {
     });
     const pets = []; // Array to hold pet objects
 
-    function loadImage(src) {
+    function loadImage(src, petType) {
       const img = new Image();
       // TODO resolve correct folder for the pet.
-      img.src = 'assets/chicken/' + src;
+      img.src = 'assets/' + petType.asset + '/' + src;
       return img;
     }
 
@@ -72,9 +78,9 @@ tableau.extensions.initializeAsync({ configure: openConfig }).then(() => {
       const petType = getRandomPetType();
       const pet = {
         x: x,
-        y: y,
-        width: useRandomSize ? randomSize * 50 : 50,
-        height: useRandomSize ? randomSize * 50 : 50,
+        y: y - (useRandomSize ? randomSize * 50 : 50) * petType.aspectRatio.y,
+        width: (useRandomSize ? randomSize * 50 : 50) * petType.aspectRatio.x,
+        height: (useRandomSize ? randomSize * 50 : 50) * petType.aspectRatio.y,
         speed: 1,
         animationFrame: 0,
         state: 'walk',
@@ -82,10 +88,10 @@ tableau.extensions.initializeAsync({ configure: openConfig }).then(() => {
         directionX: Math.random() < 0.5 ? -1 : 1,
         directionY: Math.random() < 0.5 ? -1 : 1,
         images: {
-          walk: petType.walk.map((src) => loadImage(src)),
-          run: petType.run.map((src) => loadImage(src)),
-          sit: loadImage(petType.sit),
-          sleep: loadImage(petType.sleep),
+          walk: petType.walk.map((src) => loadImage(src, petType)),
+          run: petType.run.map((src) => loadImage(src, petType)),
+          sit: loadImage(petType.sit, petType),
+          sleep: loadImage(petType.sleep, petType),
         },
         currentImage: null,
         animationTimer: 0,
@@ -103,7 +109,7 @@ tableau.extensions.initializeAsync({ configure: openConfig }).then(() => {
       if (useYcoords) {
         pet = createPet(Math.random() * canvas.width, Math.random() * canvas.height);
       } else {
-        pet = createPet(Math.random() * canvas.width, canvas.height - 50);
+        pet = createPet(Math.random() * canvas.width, canvas.height);
       }
       pets.push(pet);
     });
