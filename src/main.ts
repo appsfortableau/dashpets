@@ -32,24 +32,32 @@ tableau.extensions.initializeAsync({ configure: openConfig }).then(() => {
         aspectRatio: { x: 1, y: 0.66 },
         walk: ['walk1.gif', 'walk2.gif', 'walk3.gif', 'walk4.gif', 'walk5.gif', 'walk6.gif', 'walk7.gif'],
         run: ['walk1.gif', 'walk2.gif', 'walk3.gif', 'walk4.gif', 'walk5.gif', 'walk6.gif', 'walk7.gif'],
-        sit: 'walk1.gif',
-        sleep: 'walk1.gif',
+        sit: ['walk1.gif'],
+        sleep: ['walk1.gif'],
       },
       chicken: {
         asset: 'chicken',
         aspectRatio: { x: 0.85, y: 1 },
         walk: ['walk1.gif', 'walk2.gif', 'walk3.gif'],
         run: ['run1.gif', 'run2.gif', 'run3.gif'],
-        sit: 'sit.gif',
-        sleep: 'sleep.gif',
+        sit: ['sit.gif'],
+        sleep: ['sleep.gif'],
+      },
+      cat: {
+        asset: 'cat',
+        aspectRatio: { x: 1, y: 0.92 },
+        walk: ['walk1.gif', 'walk2.gif'],
+        run: ['walk1.gif', 'walk2.gif'],
+        sit: ['sit1.gif', 'sit2.gif', 'sit3.gif'],
+        sleep: ['sit1.gif'],
       },
       crab: {
         asset: 'crab',
         aspectRatio: { x: 1, y: 0.76 },
         walk: ['walk1.gif', 'walk2.gif', 'walk3.gif', 'walk4.gif', 'walk5.gif'],
         run: ['walk1.gif', 'walk2.gif', 'walk3.gif', 'walk4.gif', 'walk5.gif'],
-        sit: 'walk1.gif',
-        sleep: 'walk1.gif',
+        sit: ['walk1.gif'],
+        sleep: ['walk1.gif'],
       },
     };
 
@@ -131,8 +139,8 @@ tableau.extensions.initializeAsync({ configure: openConfig }).then(() => {
         images: {
           walk: petType.walk.map((src) => loadImage(src, petType)),
           run: petType.run.map((src) => loadImage(src, petType)),
-          sit: loadImage(petType.sit, petType),
-          sleep: loadImage(petType.sleep, petType),
+          sit: petType.sit.map((src) => loadImage(src, petType)),
+          sleep: petType.sleep.map((src) => loadImage(src, petType)),
         },
         currentImage: null,
         animationTimer: 0,
@@ -190,10 +198,8 @@ tableau.extensions.initializeAsync({ configure: openConfig }).then(() => {
         const random = Math.random();
         if (random < 0.3) {
           pet.state = 'sit';
-          pet.currentImage = pet.images.sit;
         } else if (random < 0.4) {
           pet.state = 'sleep';
-          pet.currentImage = pet.images.sleep;
         } else if (random < 0.5) {
           pet.state = 'run';
           pet.speed = 3;
@@ -209,10 +215,10 @@ tableau.extensions.initializeAsync({ configure: openConfig }).then(() => {
       pet.animationTimer += deltaTime;
       if (pet.animationTimer > pet.animationDelay) {
         pet.animationTimer = 0;
-        if (pet.state === 'walk' || pet.state === 'run') {
-          pet.animationFrame = (pet.animationFrame + 1) % pet.images[pet.state].length;
-          pet.currentImage = pet.images[pet.state][pet.animationFrame];
-        }
+        // if (pet.state === 'walk' || pet.state === 'run') {
+        pet.animationFrame = (pet.animationFrame + 1) % pet.images[pet.state].length;
+        pet.currentImage = pet.images[pet.state][pet.animationFrame];
+        // }
       }
 
       if (pet.state === 'walk' || pet.state === 'run') {
