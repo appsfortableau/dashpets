@@ -125,6 +125,7 @@ tableau.extensions.initializeAsync({ configure: openConfig }).then(() => {
         animationFrame: 0,
         state: 'walk',
         hover: false,
+        selected: false,
         directionX: Math.random() < 0.5 ? -1 : 1,
         directionY: Math.random() < 0.5 ? -1 : 1,
         images: {
@@ -158,6 +159,10 @@ tableau.extensions.initializeAsync({ configure: openConfig }).then(() => {
     });
 
     function updatePet(pet, deltaTime) {
+      if (pet.selected) {
+        // Stop movement if selected
+        return;
+      }
       // Tooltip logic
       pet.tooltipTimer += deltaTime;
 
@@ -260,6 +265,12 @@ tableau.extensions.initializeAsync({ configure: openConfig }).then(() => {
 
     function drawPet(pet) {
       if (pet.currentImage && pet.currentImage.complete) {
+        if (pet.selected) {
+          // Draw a black border around the pet
+          ctx.strokeStyle = 'black';
+          ctx.lineWidth = 2;
+          ctx.strokeRect(pet.x - 2, pet.y - 2, pet.width + 4, pet.height + 4);
+        }
         ctx.save();
 
         if (pet.directionX === -1) {
@@ -305,6 +316,7 @@ tableau.extensions.initializeAsync({ configure: openConfig }).then(() => {
         }
         pet.hover = mouseX >= pet.x && mouseX <= pet.x + pet.width && mouseY >= pet.y && mouseY <= pet.y + pet.height;
         if (pet.hover) {
+          canvas.style.cursor = 'pointer';
           hoveringPet = true;
           if (!tooltipAlreadyActive) {
             const myHoveredTuple = index + 1;
@@ -315,6 +327,7 @@ tableau.extensions.initializeAsync({ configure: openConfig }).then(() => {
         }
       });
       if (!hoveringPet) {
+        canvas.style.cursor = 'default';
         window?.tableau?.extensions?.worksheetContent?.worksheet.hoverTupleAsync(99999999999, {
           tooltipAnchorPoint: { x: mouseX, y: mouseY + 100 },
         });
@@ -322,10 +335,21 @@ tableau.extensions.initializeAsync({ configure: openConfig }).then(() => {
     });
 
     canvas.addEventListener('mouseleave', () => {
-      // window?.tableau?.extensions?.worksheetContent?.worksheet.hoverTupleAsync(-1, {
-      //   tooltipAnchorPoint: { x: pet.x, y: pet.y + 100 },
-      // });
       pets.forEach((pet) => (pet.hover = false));
+    });
+
+    canvas.addEventListener('mousedown', (e) => {
+      const rect = canvas.getBoundingClientRect();
+      const clickX = e.clientX - rect.left;
+      const clickY = e.clientY - rect.top;
+
+      pets.forEach((pet) => {
+        // Check if the click is within the pet's bounding box
+        if (clickX >= pet.x && clickX <= pet.x + pet.width && clickY >= pet.y && clickY <= pet.y + pet.height) {
+          pet.selected = !pet.selected; // Toggle selection
+          console.log('DASHBOARD ACTIONS ADD HERE:', pet); // Log something
+        }
+      });
     });
 
     gameLoop();
