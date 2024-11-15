@@ -183,12 +183,21 @@ tableau.extensions.initializeAsync({ configure: openConfig }).then(() => {
       const mouseX = e.clientX - rect.left;
       const mouseY = e.clientY - rect.top;
 
-      pets.forEach((pet) => {
+      pets.forEach((pet, index) => {
         pet.hover = mouseX >= pet.x && mouseX <= pet.x + pet.width && mouseY >= pet.y && mouseY <= pet.y + pet.height;
+        if (pet.hover) {
+          const myHoveredTuple = index + 1;
+          window?.tableau?.extensions?.worksheetContent?.worksheet.hoverTupleAsync(myHoveredTuple, {
+            tooltipAnchorPoint: { x: mouseX, y: mouseY + 100 },
+          });
+        }
       });
     });
 
     canvas.addEventListener('mouseleave', () => {
+      // window?.tableau?.extensions?.worksheetContent?.worksheet.hoverTupleAsync(-1, {
+      //   tooltipAnchorPoint: { x: pet.x, y: pet.y + 100 },
+      // });
       pets.forEach((pet) => (pet.hover = false));
     });
 
