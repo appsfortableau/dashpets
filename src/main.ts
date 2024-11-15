@@ -19,6 +19,9 @@ tableau.extensions.initializeAsync({ configure: openConfig }).then(() => {
   async function updateDataAndRender() {
     // set to true to use the Y axis as well
     let useYcoords = true;
+    // just for fun for now, lets change it to a measure of Tableau
+    let useRandomSize = true;
+
     const fields = await getFieldsOnEncoding(worksheet);
     const data = await getSummaryDataTable(worksheet);
 
@@ -65,12 +68,13 @@ tableau.extensions.initializeAsync({ configure: openConfig }).then(() => {
     }
 
     function createPet(x, y) {
+      let randomSize = Math.random();
       const petType = getRandomPetType();
       const pet = {
         x: x,
         y: y,
-        width: 50,
-        height: 50,
+        width: useRandomSize ? randomSize * 50 : 50,
+        height: useRandomSize ? randomSize * 50 : 50,
         speed: 1,
         animationFrame: 0,
         state: 'walk',
