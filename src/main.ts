@@ -18,7 +18,7 @@ tableau.extensions.initializeAsync({ configure: openConfig }).then(() => {
 
   async function updateDataAndRender() {
     // set to true to use the Y axis as well
-    let useYcoords = true;
+    let useYcoords = false;
     // just for fun for now, lets change it to a measure of Tableau
     let useRandomSize = false;
 
@@ -27,16 +27,16 @@ tableau.extensions.initializeAsync({ configure: openConfig }).then(() => {
     let selected = [];
     // Pet data - define different pet types with unique images
     const petTypes = {
-      // dog: {
-      //   asset: 'dog',
-      //   canFly: false,
-      //   speed: 1,
-      //   aspectRatio: { x: 1, y: 0.66 },
-      //   walk: ['walk1.gif', 'walk2.gif', 'walk3.gif', 'walk4.gif', 'walk5.gif', 'walk6.gif', 'walk7.gif'],
-      //   run: ['walk1.gif', 'walk2.gif', 'walk3.gif', 'walk4.gif', 'walk5.gif', 'walk6.gif', 'walk7.gif'],
-      //   sit: ['walk1.gif'],
-      //   sleep: ['walk1.gif'],
-      // },
+      dog: {
+        asset: 'dog',
+        canFly: false,
+        speed: 1,
+        aspectRatio: { x: 1, y: 0.66 },
+        walk: ['walk1.png', 'walk2.png'],
+        run: ['walk1.png', 'walk2.png'],
+        sit: ['sit1.png', 'sit2.png'],
+        sleep: ['sleep1.png', 'sleep2.png'],
+      },
       chicken: {
         asset: 'chicken',
         canFly: false,
