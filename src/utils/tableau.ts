@@ -4,7 +4,7 @@ export function openConfig(): Object {
   window.tableau.extensions.ui
     .displayDialogAsync('./config.html', 'null', {
       height: 900,
-      width: 1050,
+      width: 400,
       //@ts-ignore can't seem to import the dailogStyle from the tableau
       dialogStyle: 'modeless',
     })
