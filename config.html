@@ -1,14 +1,46 @@
 <!DOCTYPE html>
-<html lang="en-GB">
+<html lang="en">
   <head>
-    <meta charset="utf-8" />
-    <title>Configuration</title>
-    <script src="/tableau.extensions.1.latest.min.js"></script>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Configure Tooltip Settings</title>
+    <style>
+      body {
+        font-family: Arial, sans-serif;
+        padding: 20px;
+      }
+      label {
+        font-size: 16px;
+      }
+      button {
+        margin-top: 10px;
+        padding: 10px 15px;
+        background-color: #007ad0;
+        color: white;
+        border: none;
+        border-radius: 5px;
+        cursor: pointer;
+      }
+      button:disabled {
+        background-color: #cfcfcf;
+      }
+    </style>
   </head>
-
-  <body style="overflow-y: hidden; overflow-x: hidden">
-    <div id="app" style="height: 100vh"></div>
-
+  <body>
+    <h2>Tooltip Settings</h2>
+    <label> <input type="checkbox" id="enableTooltips" /> Enable Tooltips </label>
+    <br />
+    <h2>Enable Y Axis</h2>
+    <label> <input type="checkbox" id="enableYAxis" /> Enable Y axis for pets</label>
+    <br />
+    <h2>Random Size</h2>
+    <label>
+      <input type="checkbox" id="enableRandomSize" /> Enable random size. For fun for now, lets replace with a
+      measure</label
+    >
+    <br />
+    <button id="saveButton">Save</button>
+    <button id="cancelButton">Cancel</button>
     <script type="module" src="/src/config.tsx"></script>
   </body>
 </html>

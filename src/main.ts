@@ -9,6 +9,7 @@ tableau.extensions.initializeAsync({ configure: openConfig }).then(() => {
   }
 
   worksheet.addEventListener(tableau.TableauEventType.SummaryDataChanged, updateDataAndRender);
+  tableau.extensions.settings.addEventListener(tableau.TableauEventType.SettingsChanged, updateDataAndRender);
 
   const canvas = document.getElementById('gameCanvas')! as HTMLCanvasElement;
   const ctx = canvas.getContext('2d');
@@ -17,10 +18,12 @@ tableau.extensions.initializeAsync({ configure: openConfig }).then(() => {
   canvas.height = window.innerHeight;
 
   async function updateDataAndRender() {
+    let settings = tableau.extensions.settings.getAll();
+    settings = 'settings' in settings ? JSON.parse(settings.settings) : {};
     // set to true to use the Y axis as well
-    let useYcoords = false;
+    let useYcoords = settings.enableYAxis;
     // just for fun for now, lets change it to a measure of Tableau
-    let useRandomSize = false;
+    let useRandomSize = settings.enableRandomSize;
 
     const fields = await getFieldsOnEncoding(worksheet);
     const data = await getSummaryDataTable(worksheet);
@@ -36,6 +39,30 @@ tableau.extensions.initializeAsync({ configure: openConfig }).then(() => {
         run: ['walk1.png', 'walk2.png'],
         sit: ['sit1.png', 'sit2.png'],
         sleep: ['sleep1.png', 'sleep2.png'],
+      },
+      dog_black: {
+        asset: 'dog_black',
+        canFly: false,
+        speed: 1,
+        aspectRatio: { x: 1, y: 0.66 },
+        walk: ['walk1.png', 'walk2.png'],
+        run: ['run1.png', 'run2.png'],
+        sit: [
+          'sit1.png',
+          'sit2.png',
+          'sit2.png',
+          'sit2.png',
+          'sit2.png',
+          'sit2.png',
+          'sit1.png',
+          'sit1.png',
+          'sit2.png',
+          'sit2.png',
+          'sit2.png',
+          'sit2.png',
+          'sit2.png',
+        ],
+        sleep: ['sleep1.png', 'sleep2.png', 'sleep2.png', 'sleep2.png', 'sleep2.png'],
       },
       chicken: {
         asset: 'chicken',
@@ -229,17 +256,18 @@ tableau.extensions.initializeAsync({ configure: openConfig }).then(() => {
       const globalTooltipFactor = Math.max(1, pets.length); // Prevent division by zero
       const tooltipChance = 0.2 / globalTooltipFactor;
       // Check if it's time to show a new tooltip
-      if (pet.tooltipTimer >= pet.tooltipCooldown) {
-        if (Math.random() < tooltipChance) {
-          // 30% chance to say something
-          pet.tooltip = messages[Math.floor(Math.random() * messages.length)];
-        } else {
-          pet.tooltip = ''; // Otherwise, clear the tooltip
+      if (settings.tooltipsEnabled) {
+        if (pet.tooltipTimer >= pet.tooltipCooldown) {
+          if (Math.random() < tooltipChance) {
+            // 30% chance to say something
+            pet.tooltip = messages[Math.floor(Math.random() * messages.length)];
+          } else {
+            pet.tooltip = ''; // Otherwise, clear the tooltip
+          }
+          pet.tooltipTimer = 0;
+          pet.tooltipCooldown = Math.random() * 3000 + 1000; // Random cooldown (5-25 seconds)
         }
-        pet.tooltipTimer = 0;
-        pet.tooltipCooldown = Math.random() * 3000 + 1000; // Random cooldown (5-25 seconds)
       }
-
       if (pet.hover) {
         pet.idleTime = 0;
         return;
