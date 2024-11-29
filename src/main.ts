@@ -1,4 +1,5 @@
 import './style.css';
+import { Pet, PetType, Vec2 } from './types.js';
 import './utils/tableau.extensions.1.latest.min.js';
 import { getFieldsOnEncoding, getSummaryDataTable, openConfig } from './utils/tableau.js';
 
@@ -12,7 +13,8 @@ tableau.extensions.initializeAsync({ configure: openConfig }).then(() => {
   tableau.extensions.settings.addEventListener(tableau.TableauEventType.SettingsChanged, updateDataAndRender);
 
   const canvas = document.getElementById('gameCanvas')! as HTMLCanvasElement;
-  const ctx = canvas.getContext('2d');
+  // NOTE: Could this be null?
+  const ctx = canvas.getContext('2d')!;
 
   canvas.width = window.innerWidth;
   canvas.height = window.innerHeight;
@@ -26,121 +28,143 @@ tableau.extensions.initializeAsync({ configure: openConfig }).then(() => {
     let useRandomSize = settings.enableRandomSize;
 
     const fields = await getFieldsOnEncoding(worksheet);
-    const data = await getSummaryDataTable(worksheet);
-    let selected = [];
+
+    // TODO: What if data is null?
+    const data = await getSummaryDataTable(worksheet)!;
+    let selected: string[] = [];
     // Pet data - define different pet types with unique images
-    const petTypes = {
+    const petTypes: Record<string, PetType> = {
       dog: {
         asset: 'dog',
         canFly: false,
         speed: 1,
         aspectRatio: { x: 1, y: 0.66 },
-        walk: ['walk1.png', 'walk2.png'],
-        run: ['walk1.png', 'walk2.png'],
-        sit: ['sit1.png', 'sit2.png'],
-        sleep: ['sleep1.png', 'sleep2.png'],
+        sprites: {
+          walk: ['walk1.png', 'walk2.png'],
+          run: ['walk1.png', 'walk2.png'],
+          sit: ['sit1.png', 'sit2.png'],
+          sleep: ['sleep1.png', 'sleep2.png'],
+        }
       },
       dog_black: {
         asset: 'dog_black',
         canFly: false,
         speed: 1,
         aspectRatio: { x: 1, y: 0.66 },
-        walk: ['walk1.png', 'walk2.png'],
-        run: ['run1.png', 'run2.png'],
-        sit: [
-          'sit1.png',
-          'sit2.png',
-          'sit2.png',
-          'sit2.png',
-          'sit2.png',
-          'sit2.png',
-          'sit1.png',
-          'sit1.png',
-          'sit2.png',
-          'sit2.png',
-          'sit2.png',
-          'sit2.png',
-          'sit2.png',
-        ],
-        sleep: ['sleep1.png', 'sleep2.png', 'sleep2.png', 'sleep2.png', 'sleep2.png'],
+        sprites: {
+          walk: ['walk1.png', 'walk2.png'],
+          run: ['run1.png', 'run2.png'],
+          sit: [
+            'sit1.png',
+            'sit2.png',
+            'sit2.png',
+            'sit2.png',
+            'sit2.png',
+            'sit2.png',
+            'sit1.png',
+            'sit1.png',
+            'sit2.png',
+            'sit2.png',
+            'sit2.png',
+            'sit2.png',
+            'sit2.png',
+          ],
+          sleep: ['sleep1.png', 'sleep2.png', 'sleep2.png', 'sleep2.png', 'sleep2.png'],
+        }
       },
       chicken: {
         asset: 'chicken',
         canFly: false,
         speed: 0.6,
         aspectRatio: { x: 0.85, y: 1 },
-        walk: ['walk1.gif', 'walk2.gif', 'walk3.gif'],
-        run: ['run1.gif', 'run2.gif', 'run3.gif'],
-        sit: ['sit.gif'],
-        sleep: ['sleep.gif'],
+        sprites: {
+          walk: ['walk1.gif', 'walk2.gif', 'walk3.gif'],
+          run: ['run1.gif', 'run2.gif', 'run3.gif'],
+          sit: ['sit.gif'],
+          sleep: ['sleep.gif'],
+        }
       },
       cat: {
         asset: 'cat',
         canFly: false,
         speed: 1.5,
         aspectRatio: { x: 1, y: 0.92 },
-        walk: ['walk1.gif', 'walk2.gif'],
-        run: ['walk1.gif', 'walk2.gif'],
-        sit: ['sit1.png'],
-        sleep: ['sleep1.png', 'sleep2.png'],
+        sprites: {
+          walk: ['walk1.gif', 'walk2.gif'],
+          run: ['walk1.gif', 'walk2.gif'],
+          sit: ['sit1.png'],
+          sleep: ['sleep1.png', 'sleep2.png'],
+        }
       },
       // bird: {
       //   asset: 'bird',
       //   canFly: true,
       //   speed: 1,
       //   aspectRatio: { x: 1, y: 0.92 },
-      //   walk: ['walk.gif'],
-      //   run: ['walk.gif'],
-      //   sit: ['walk.gif'],
-      //   sleep: ['walk.gif'],
+      //   sprites: {
+      //     walk: ['walk.gif'],
+      //     run: ['walk.gif'],
+      //     sit: ['walk.gif'],
+      //     sleep: ['walk.gif'],
+      //   }
       // },
       crab: {
         asset: 'crab',
         canFly: false,
         speed: 0.3,
         aspectRatio: { x: 1, y: 0.76 },
-        walk: ['walk1.gif', 'walk2.gif', 'walk3.gif', 'walk4.gif', 'walk5.gif'],
-        run: ['walk1.gif', 'walk2.gif', 'walk3.gif', 'walk4.gif', 'walk5.gif'],
-        sit: ['walk1.gif'],
-        sleep: ['walk1.gif'],
+        sprites: {
+          walk: ['walk1.gif', 'walk2.gif', 'walk3.gif', 'walk4.gif', 'walk5.gif'],
+          run: ['walk1.gif', 'walk2.gif', 'walk3.gif', 'walk4.gif', 'walk5.gif'],
+          sit: ['walk1.gif'],
+          sleep: ['walk1.gif'],
+        }
       },
       shark: {
         asset: 'shark',
         canFly: false,
         speed: 0.3,
         aspectRatio: { x: 1, y: 0.225 },
-        walk: ['walk1.png'],
-        run: ['run1.png'],
-        sit: ['walk1.png'],
-        sleep: ['walk1.png'],
+        sprites: {
+          walk: ['walk1.png'],
+          run: ['run1.png'],
+          sit: ['walk1.png'],
+          sleep: ['walk1.png'],
+        }
       },
       guineapig: {
         asset: 'guineapig',
         canFly: false,
         speed: 0.1,
         aspectRatio: { x: 1, y: 0.56 },
-        walk: ['walk1.png', 'sit1.png'],
-        run: ['walk1.png', 'sit1.png'],
-        sit: ['sit1.png'],
-        sleep: ['sleep1.png'],
+        sprites: {
+          walk: ['walk1.png', 'sit1.png'],
+          run: ['walk1.png', 'sit1.png'],
+          sit: ['sit1.png'],
+          sleep: ['sleep1.png'],
+        }
       },
       rat: {
         asset: 'rat',
         canFly: false,
         speed: 1,
         aspectRatio: { x: 1, y: 0.56 },
-        walk: ['walk1.png'],
-        run: ['walk1.png'],
-        sit: ['sit1.png'],
-        sleep: ['sleep1.png'],
+        sprites: {
+          walk: ['walk1.png'],
+          run: ['walk1.png'],
+          sit: ['sit1.png'],
+          sleep: ['sleep1.png'],
+        }
       },
     };
 
     // GET FROM TABLEAU
-    const petsData = data.data.map((row) => {
-      return row[0].value;
-    });
-    const pets = []; // Array to hold pet objects
+    // Data from tableau is not strongly typed
+    const petsData = data?.data.map((row) => {
+      return row[0].value as (string | number | boolean);
+    }) ?? [];
+
+    const pets: Pet[] = [];
     const messages = [
       '👋', // wave hand emoji
       'Hello!',
@@ -184,7 +208,7 @@ tableau.extensions.initializeAsync({ configure: openConfig }).then(() => {
       'Nap time is calling! 🛌',
     ];
 
-    function loadImage(src, petType) {
+    function loadImage(src: string, petType: PetType): HTMLImageElement {
       const img = new Image();
       // TODO resolve correct folder for the pet.
       img.src = 'assets/' + petType.asset + '/' + src;
@@ -192,19 +216,35 @@ tableau.extensions.initializeAsync({ configure: openConfig }).then(() => {
     }
 
     // Helper function to randomly select a pet type
-    function getRandomPetType() {
+    function getRandomPetType(): PetType {
       const petTypeKeys = Object.keys(petTypes);
       const randomKey = petTypeKeys[Math.floor(Math.random() * petTypeKeys.length)];
       return petTypes[randomKey];
     }
 
-    function createPet(name, x, y) {
+    function createPet(name: string, position: Vec2): Pet {
       let randomSize = Math.random();
       const petType = getRandomPetType();
-      const pet = {
+      const images = {
+        walk: petType.sprites.walk.map((src) => loadImage(src, petType)),
+        run: petType.sprites.run.map((src) => loadImage(src, petType)),
+        sit: petType.sprites.sit.map((src) => loadImage(src, petType)),
+        sleep: petType.sprites.sleep.map((src) => loadImage(src, petType)),
+      }
+
+      const petPosition = {
+        x: position.x,
+        y: position.y - (useRandomSize ? randomSize * 50 : 50) * petType.aspectRatio.y,
+      }
+
+      const direction: Vec2 = {
+        x: Math.random() < 0.5 ? -1 : 1,
+        y: Math.random() < 0.5 ? -1 : 1
+      }
+
+      const pet: Pet = {
         name: name,
-        x: x,
-        y: y - (useRandomSize ? randomSize * 50 : 50) * petType.aspectRatio.y,
+        position: petPosition,
         width: (useRandomSize ? randomSize * 50 : 50) * petType.aspectRatio.x,
         height: (useRandomSize ? randomSize * 50 : 50) * petType.aspectRatio.y,
         speed: petType.speed,
@@ -213,39 +253,37 @@ tableau.extensions.initializeAsync({ configure: openConfig }).then(() => {
         state: 'walk',
         hover: false,
         selected: false,
-        directionX: Math.random() < 0.5 ? -1 : 1,
-        directionY: Math.random() < 0.5 ? -1 : 1,
-        images: {
-          walk: petType.walk.map((src) => loadImage(src, petType)),
-          run: petType.run.map((src) => loadImage(src, petType)),
-          sit: petType.sit.map((src) => loadImage(src, petType)),
-          sleep: petType.sleep.map((src) => loadImage(src, petType)),
-        },
-        currentImage: null,
+        direction,
+        images,
+        currentImage: images.walk[0],
         animationTimer: 0,
         animationDelay: 300,
         idleTime: 0,
         idleTimeLimit: Math.random() * 2000 + 2000,
-        tooltip: '', // Tooltip text
-        tooltipTimer: 0, // Timer for showing a new message
+        tooltip: '',
+        tooltipTimer: 0,
         tooltipCooldown: Math.random() * 20000 + 5000,
       };
-      pet.currentImage = pet.images.walk[0]; // Default to first walking image
+
       return pet;
     }
 
-    // Create each pet from petsData and add to pets array
-    petsData.forEach((name, index) => {
-      let pet;
+    function getInitialPetPosition(): Vec2 {
       if (useYcoords) {
-        pet = createPet(name, Math.random() * canvas.width, Math.random() * canvas.height);
+        return { x: Math.random() * canvas.width, y: Math.random() * canvas.height };
       } else {
-        pet = createPet(name, Math.random() * canvas.width, canvas.height);
+        return { x: Math.random() * canvas.width, y: canvas.height };
       }
+    }
+
+    // Create each pet from petsData and add to pets array
+    petsData.forEach((name) => {
+      const pet: Pet = createPet(name.toString(), getInitialPetPosition());
+
       pets.push(pet);
     });
 
-    function updatePet(pet, deltaTime) {
+    function updatePet(pet: Pet, deltaTime: number) {
       if (pet.selected) {
         // Stop movement if selected
         return;
@@ -287,8 +325,8 @@ tableau.extensions.initializeAsync({ configure: openConfig }).then(() => {
           pet.state = 'walk';
           pet.speed = 1;
         }
-        pet.directionX = Math.random() < 0.5 ? -1 : 1;
-        pet.directionY = Math.random() < 0.5 ? -1 : 1;
+        pet.direction.x = Math.random() < 0.5 ? -1 : 1;
+        pet.direction.y = Math.random() < 0.5 ? -1 : 1;
         pet.idleTime = 0;
       }
 
@@ -302,40 +340,40 @@ tableau.extensions.initializeAsync({ configure: openConfig }).then(() => {
       }
 
       if (pet.state === 'walk' || pet.state === 'run') {
-        pet.x += pet.speed * pet.directionX;
+        pet.position.x += pet.speed * pet.direction.x;
         if (useYcoords || pet.canFly) {
-          pet.y += pet.speed * pet.directionY;
+          pet.position.y += pet.speed * pet.direction.y;
         }
       }
 
-      if (pet.x <= 0) {
-        pet.x = 0;
-        pet.directionX = 1;
+      if (pet.position.x <= 0) {
+        pet.position.x = 0;
+        pet.direction.x = 1;
       }
-      if (pet.x + pet.width >= canvas.width) {
-        pet.x = canvas.width - pet.width;
-        pet.directionX = -1;
+      if (pet.position.x + pet.width >= canvas.width) {
+        pet.position.x = canvas.width - pet.width;
+        pet.direction.x = -1;
       }
       if (useYcoords || pet.canFly) {
-        if (pet.y <= 0) {
-          pet.y = 0;
-          pet.directionY = 1;
+        if (pet.position.y <= 0) {
+          pet.position.y = 0;
+          pet.direction.y = 1;
         }
-        if (pet.y + pet.height >= canvas.height) {
-          pet.y = canvas.height - pet.height;
-          pet.directionY = -1;
+        if (pet.position.y + pet.height >= canvas.height) {
+          pet.position.y = canvas.height - pet.height;
+          pet.direction.y = -1;
         }
       }
     }
 
-    function drawTooltip(pet) {
+    function drawTooltip(pet: Pet) {
       if (pet.tooltip) {
         ctx.font = '10px Monocraft';
         ctx.fillStyle = 'white';
 
         const textWidth = ctx.measureText(pet.tooltip).width;
-        const tooltipX = pet.x + pet.width / 2 - textWidth / 2 - 10;
-        const tooltipY = pet.y - 30;
+        const tooltipX = pet.position.x + pet.width / 2 - textWidth / 2 - 10;
+        const tooltipY = pet.position.y - 30;
 
         // Pixelated border
         ctx.fillStyle = 'black';
@@ -349,22 +387,22 @@ tableau.extensions.initializeAsync({ configure: openConfig }).then(() => {
       }
     }
 
-    function drawPet(pet) {
+    function drawPet(pet: Pet) {
       if (pet.currentImage && pet.currentImage.complete) {
         if (pet.selected) {
           // Draw a black border around the pet
           ctx.strokeStyle = 'black';
           ctx.lineWidth = 1;
-          ctx.strokeRect(pet.x - 1, pet.y - 1, pet.width + 2, pet.height + 2);
+          ctx.strokeRect(pet.position.x - 1, pet.position.y - 1, pet.width + 2, pet.height + 2);
         }
         ctx.save();
 
-        if (pet.directionX === -1) {
-          ctx.translate(pet.x + pet.width, pet.y);
+        if (pet.direction.x === -1) {
+          ctx.translate(pet.position.x + pet.width, pet.position.y);
           ctx.scale(-1, 1);
           ctx.drawImage(pet.currentImage, 0, 0, pet.width, pet.height);
         } else {
-          ctx.drawImage(pet.currentImage, pet.x, pet.y, pet.width, pet.height);
+          ctx.drawImage(pet.currentImage, pet.position.x, pet.position.y, pet.width, pet.height);
         }
 
         ctx.restore();
@@ -400,7 +438,7 @@ tableau.extensions.initializeAsync({ configure: openConfig }).then(() => {
         if (pet.hover) {
           tooltipAlreadyActive = true;
         }
-        pet.hover = mouseX >= pet.x && mouseX <= pet.x + pet.width && mouseY >= pet.y && mouseY <= pet.y + pet.height;
+        pet.hover = mouseX >= pet.position.x && mouseX <= pet.position.x + pet.width && mouseY >= pet.position.y && mouseY <= pet.position.y + pet.height;
         if (pet.hover) {
           canvas.style.cursor = 'pointer';
           hoveringPet = true;
@@ -431,7 +469,7 @@ tableau.extensions.initializeAsync({ configure: openConfig }).then(() => {
 
       pets.forEach((pet) => {
         // Check if the click is within the pet's bounding box
-        if (clickX >= pet.x && clickX <= pet.x + pet.width && clickY >= pet.y && clickY <= pet.y + pet.height) {
+        if (clickX >= pet.position.x && clickX <= pet.position.x + pet.width && clickY >= pet.position.y && clickY <= pet.position.y + pet.height) {
           pet.selected = !pet.selected; // Toggle selection
           if (pet.selected) {
             selected.push(pet.name);

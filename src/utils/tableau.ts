@@ -1,4 +1,4 @@
-import { Worksheet } from '@tableau/extensions-api-types';
+import { DataTable, Worksheet } from '@tableau/extensions-api-types';
 
 export function openConfig(): Object {
   window.tableau.extensions.ui
@@ -8,7 +8,7 @@ export function openConfig(): Object {
       //@ts-ignore can't seem to import the dailogStyle from the tableau
       dialogStyle: 'modeless',
     })
-    .then(() => {})
+    .then(() => { })
     .catch((error: { errorCode: any; message: any }) => {
       switch (error.errorCode) {
         case window.tableau.ErrorCodes.DialogClosedByUser:
@@ -38,8 +38,8 @@ export async function getFieldsOnEncoding(worksheet: Worksheet) {
 }
 
 // associated with field names.
-export async function getSummaryDataTable(worksheet: Worksheet) {
-  let rows = [];
+export async function getSummaryDataTable(worksheet: Worksheet): Promise<(null | DataTable)> {
+  let rows: DataTable | null = null;
 
   // Fetch the summary data using the DataTableReader
   const dataTableReader = await worksheet.getSummaryDataReaderAsync(undefined, { ignoreSelection: true });
