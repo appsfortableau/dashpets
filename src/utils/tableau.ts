@@ -20,14 +20,15 @@ export function openConfig(): Object {
   return {};
 }
 
-export function isVizExtension() {
+export function isVizExtension(): boolean {
   return !window.tableau.extensions.dashboardContent;
 }
 
-export async function getFieldsOnEncoding(worksheet: Worksheet) {
+export async function getFieldsOnEncoding(worksheet: Worksheet): Promise<string[]> {
   const visualSpec = await worksheet.getVisualSpecificationAsync();
   const marksCard = visualSpec.marksSpecifications[visualSpec.activeMarksSpecificationIndex];
-  const encodings = [];
+  const encodings: string[] = [];
+
   for (const encoding of marksCard.encodings) {
     if (encoding.id === 'dimension') {
       encodings.push(encoding.field.name);
