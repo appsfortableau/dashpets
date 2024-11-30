@@ -1,7 +1,8 @@
 import './style.css';
-import { Pet, PetType, Vec2 } from './types.js';
+import { Pet, PetType, Vec2 } from './types';
 import './utils/tableau.extensions.1.latest.min.js';
 import { getFieldsOnEncoding, getSummaryDataTable, openConfig } from './utils/tableau.js';
+import { immediateThenDebounce } from './utils/debounce.js';
 
 tableau.extensions.initializeAsync({ configure: openConfig }).then(() => {
   const worksheet = tableau.extensions.worksheetContent?.worksheet!;
@@ -428,35 +429,37 @@ tableau.extensions.initializeAsync({ configure: openConfig }).then(() => {
 
     let lastUpdateTime = Date.now();
 
-    canvas.addEventListener('mousemove', (e) => {
-      const rect = canvas.getBoundingClientRect();
-      const mouseX = e.clientX - rect.left;
-      const mouseY = e.clientY - rect.top;
-      let hoveringPet = false;
-      pets.forEach((pet, index) => {
-        let tooltipAlreadyActive = false;
-        if (pet.hover) {
-          tooltipAlreadyActive = true;
-        }
-        pet.hover = mouseX >= pet.position.x && mouseX <= pet.position.x + pet.width && mouseY >= pet.position.y && mouseY <= pet.position.y + pet.height;
-        if (pet.hover) {
-          canvas.style.cursor = 'pointer';
-          hoveringPet = true;
-          if (!tooltipAlreadyActive) {
-            const myHoveredTuple = index + 1;
-            window?.tableau?.extensions?.worksheetContent?.worksheet.hoverTupleAsync(myHoveredTuple, {
-              tooltipAnchorPoint: { x: mouseX, y: mouseY + 100 },
-            });
+    canvas.addEventListener('mousemove',
+      immediateThenDebounce((e) => {
+        const rect = canvas.getBoundingClientRect();
+        const mouseX = e.clientX - rect.left;
+        const mouseY = e.clientY - rect.top;
+        const didDrawTooltip = pets.some((pet, index) => {
+          let tooltipAlreadyActive = !!pet.hover;
+          pet.hover = mouseX >= pet.position.x && mouseX <= pet.position.x + pet.width && mouseY >= pet.position.y && mouseY <= pet.position.y + pet.height;
+
+          if (pet.hover) {
+            canvas.style.cursor = 'pointer';
+            if (!tooltipAlreadyActive) {
+              const myHoveredTuple = index + 1;
+              window?.tableau?.extensions?.worksheetContent?.worksheet.hoverTupleAsync(myHoveredTuple, {
+                tooltipAnchorPoint: { x: mouseX, y: mouseY + 100 },
+              });
+            }
+
+            return true;
           }
-        }
-      });
-      if (!hoveringPet) {
-        canvas.style.cursor = 'default';
-        window?.tableau?.extensions?.worksheetContent?.worksheet.hoverTupleAsync(99999999999, {
-          tooltipAnchorPoint: { x: mouseX, y: mouseY + 100 },
         });
-      }
-    });
+
+        if (!didDrawTooltip) {
+          // If we get here the cursor is not on a pet so we can remove the tooltip
+          canvas.style.cursor = 'default';
+          window?.tableau?.extensions?.worksheetContent?.worksheet.hoverTupleAsync(99999999999, {
+            tooltipAnchorPoint: { x: mouseX, y: mouseY + 100 },
+          });
+        }
+      }, 25)
+    );
 
     canvas.addEventListener('mouseleave', () => {
       pets.forEach((pet) => (pet.hover = false));
