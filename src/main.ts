@@ -1,7 +1,8 @@
 import './style.css';
+import './utils/strings';
 import { Pet, PetType, Vec2 } from './types';
 import './utils/tableau.extensions.1.latest.min.js';
-import { getFieldsOnEncoding, getSummaryDataTable, openConfig } from './utils/tableau.js';
+import { getEncodings, getSummaryDataTable, openConfig } from './utils/tableau';
 import { immediateThenDebounce } from './utils/debounce.js';
 
 tableau.extensions.initializeAsync({ configure: openConfig }).then(() => {
@@ -28,7 +29,7 @@ tableau.extensions.initializeAsync({ configure: openConfig }).then(() => {
     // just for fun for now, lets change it to a measure of Tableau
     let useRandomSize = settings.enableRandomSize;
 
-    const fields = await getFieldsOnEncoding(worksheet);
+    const fields = await getEncodings(worksheet);
 
     // TODO: What if data is null?
     const data = await getSummaryDataTable(worksheet)!;
@@ -159,11 +160,14 @@ tableau.extensions.initializeAsync({ configure: openConfig }).then(() => {
       },
     };
 
+    const includeData = data?.columns.map(col => fields["dimension"].includes(col.fieldName)) ?? []
+
     // GET FROM TABLEAU
     // Data from tableau is not strongly typed
-    const petsData = data?.data.map((row) => {
-      return row[0].value as (string | number | boolean);
-    }) ?? [];
+    // Only the dimensions are needed because they define the datapoints
+    const petsData = Array.from(new Set(data?.data.map((row) => {
+      return row.map((data, i) => includeData[i] ? data.value : "").filter(Boolean).join("🚰");
+    }) ?? []));
 
     const pets: Pet[] = [];
     const messages = [
@@ -217,15 +221,24 @@ tableau.extensions.initializeAsync({ configure: openConfig }).then(() => {
     }
 
     // Helper function to randomly select a pet type
-    function getRandomPetType(): PetType {
-      const petTypeKeys = Object.keys(petTypes);
-      const randomKey = petTypeKeys[Math.floor(Math.random() * petTypeKeys.length)];
-      return petTypes[randomKey];
+    // function getRandomPetType(): PetType {
+    //   const petTypeKeys = Object.keys(petTypes);
+    //   const randomKey = petTypeKeys[Math.floor(Math.random() * petTypeKeys.length)];
+    //   return petTypes[randomKey];
+    // }
+
+    function getPetTypeFromHash(name: string): PetType {
+      const hashCode = name.hashCode();
+
+      const petTypesArr = Object.values(petTypes)
+      const petIndex = Math.abs(hashCode) % petTypesArr.length
+
+      return petTypesArr[petIndex]
     }
 
     function createPet(name: string, position: Vec2): Pet {
       let randomSize = Math.random();
-      const petType = getRandomPetType();
+      const petType = getPetTypeFromHash(name);
       const images = {
         walk: petType.sprites.walk.map((src) => loadImage(src, petType)),
         run: petType.sprites.run.map((src) => loadImage(src, petType)),
@@ -477,7 +490,7 @@ tableau.extensions.initializeAsync({ configure: openConfig }).then(() => {
           if (pet.selected) {
             selected.push(pet.name);
             worksheet.selectMarksByValueAsync(
-              [{ fieldName: fields[0], value: selected }],
+              [{ fieldName: fields["dimension"][0], value: selected }],
               window.tableau.SelectionUpdateType.Replace
             );
           } else {
@@ -487,7 +500,7 @@ tableau.extensions.initializeAsync({ configure: openConfig }).then(() => {
               1
             );
             worksheet.selectMarksByValueAsync(
-              [{ fieldName: fields[0], value: selected }],
+              [{ fieldName: fields["dimension"][0], value: selected }],
               window.tableau.SelectionUpdateType.Replace
             );
           }

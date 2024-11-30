@@ -24,15 +24,17 @@ export function isVizExtension(): boolean {
   return !window.tableau.extensions.dashboardContent;
 }
 
-export async function getFieldsOnEncoding(worksheet: Worksheet): Promise<string[]> {
+// Returns a object with the keys of the different encodings with values as a string of encoding names
+export async function getEncodings(worksheet: Worksheet): Promise<Record<string, string[]>> {
   const visualSpec = await worksheet.getVisualSpecificationAsync();
   const marksCard = visualSpec.marksSpecifications[visualSpec.activeMarksSpecificationIndex];
-  const encodings: string[] = [];
+  const encodings: Record<string, string[]> = {};
 
   for (const encoding of marksCard.encodings) {
-    if (encoding.id === 'dimension') {
-      encodings.push(encoding.field.name);
-    }
+    if (!(encoding.id in encodings))
+      encodings[encoding.id] = [];
+
+    encodings[encoding.id].push(encoding.field.name);
   }
 
   return encodings;
@@ -49,6 +51,8 @@ export async function getSummaryDataTable(worksheet: Worksheet): Promise<(null |
     rows = dataTablePage;
   }
   await dataTableReader.releaseAsync();
+
+  console.log(rows)
 
   return rows;
 }
