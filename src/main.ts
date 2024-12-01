@@ -110,6 +110,7 @@ tableau.extensions.initializeAsync({ configure: openConfig }).then(() => {
       const name = getNameFromDataPoint(dataPoint);
       const petType = getPetTypeFromHash(name);
       const dimensions = getPetDimensions(dataPoint, petType);
+      const direction = getRandomDirection();
       const images = {
         walk: petType.sprites.walk.map((src) => loadImage(src, petType)),
         run: petType.sprites.run.map((src) => loadImage(src, petType)),
@@ -120,11 +121,6 @@ tableau.extensions.initializeAsync({ configure: openConfig }).then(() => {
       const petPosition = {
         x: position.x,
         y: position.y - dimensions.y,
-      }
-
-      const direction: Vec2 = {
-        x: Math.random() < 0.5 ? -1 : 1,
-        y: Math.random() < 0.5 ? -1 : 1
       }
 
       const pet: Pet = {
@@ -159,6 +155,29 @@ tableau.extensions.initializeAsync({ configure: openConfig }).then(() => {
       } else {
         return { x: Math.random() * canvas.width, y: canvas.height };
       }
+    }
+
+    const minSpeed = 0.5;
+    const maxSpeed = 1;
+    // double max speed for when using 2 dimensions instead of one
+    const doubleMaxSpeed = maxSpeed * 2;
+    function getRandomDirection(): Vec2 {
+      let dirX = 0, dirY = 0;
+
+      if (settings.displaySettings.enableYAxis) {
+        // Set the direction to a random angle
+        const angle = lerp(0, 2 * Math.PI, Math.random())
+
+        dirX = doubleMaxSpeed * Math.cos(angle)
+        dirY = doubleMaxSpeed * Math.sin(angle)
+      } else {
+        dirX = lerp(minSpeed, maxSpeed, Math.random())
+      }
+
+      dirX *= (Math.random() < 0.5 ? -1 : 1);
+      dirY *= (Math.random() < 0.5 ? -1 : 1);
+
+      return { x: dirX, y: dirY }
     }
 
     const indexToFieldNameMap = data?.columns.map(col => col.fieldName) ?? []
@@ -240,8 +259,7 @@ tableau.extensions.initializeAsync({ configure: openConfig }).then(() => {
           pet.state = 'walk';
           pet.speed = 1;
         }
-        pet.direction.x = Math.random() < 0.5 ? -1 : 1;
-        pet.direction.y = Math.random() < 0.5 ? -1 : 1;
+        pet.direction = getRandomDirection()
         pet.idleTime = 0;
       }
 
@@ -312,7 +330,7 @@ tableau.extensions.initializeAsync({ configure: openConfig }).then(() => {
         }
         ctx.save();
 
-        if (pet.direction.x === -1) {
+        if (pet.direction.x < 0) {
           ctx.translate(pet.position.x + pet.dimensions.x, pet.position.y);
           ctx.scale(-1, 1);
           ctx.drawImage(pet.currentImage, 0, 0, pet.dimensions.x, pet.dimensions.y);
