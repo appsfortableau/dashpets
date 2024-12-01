@@ -4,7 +4,7 @@ import '@/utils/strings';
 import { DataPoint, Pet, PetType, Vec2 } from '@/types/pet';
 import '@/utils/tableau.extensions.1.latest.min.js';
 import { getEncodings, getSummaryDataTable, openConfig } from '@/utils/tableau/data';
-import { immediateThenDebounce } from '@/utils/debounce.js';
+import { debounce, immediateThenDebounce } from '@/utils/debounce.js';
 import { getStoredTableauSettings } from '@/utils/tableau/settings';
 import { lerp } from '@/utils/lerp';
 import { petTypes } from '@/petTypes';
@@ -15,8 +15,6 @@ tableau.extensions.initializeAsync({ configure: openConfig }).then(() => {
     return; // no worksheet
   }
 
-  worksheet.addEventListener(tableau.TableauEventType.SummaryDataChanged, updateDataAndRender);
-  tableau.extensions.settings.addEventListener(tableau.TableauEventType.SettingsChanged, updateDataAndRender);
 
   const canvas = document.getElementById('gameCanvas')! as HTMLCanvasElement;
   // NOTE: Could this be null?
@@ -25,7 +23,12 @@ tableau.extensions.initializeAsync({ configure: openConfig }).then(() => {
   canvas.width = window.innerWidth;
   canvas.height = window.innerHeight;
 
-  async function updateDataAndRender() {
+  const updateDataAndRender = debounce(_updateDataAndRender, 100)
+
+  worksheet.addEventListener(tableau.TableauEventType.SummaryDataChanged, updateDataAndRender);
+  tableau.extensions.settings.addEventListener(tableau.TableauEventType.SettingsChanged, updateDataAndRender);
+
+  async function _updateDataAndRender() {
     const settings = getStoredTableauSettings()
     // set to true to use the Y axis as well
     const useYcoords = settings.displaySettings.enableYAxis;
