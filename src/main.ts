@@ -330,10 +330,12 @@ tableau.extensions.initializeAsync({ configure: openConfig }).then(() => {
       const deltaTime = currentTime - lastUpdateTime;
       lastUpdateTime = currentTime;
 
-      pets.forEach((pet) => {
+      // Draw from back to front to make sure the hover is for the animal at the highest z-index
+      for (let i = pets.length - 1; i >= 0; i--) {
+        const pet = pets[i];
         updatePet(pet, deltaTime);
         drawPet(pet);
-      });
+      }
 
       requestAnimationFrame(gameLoop);
     }
