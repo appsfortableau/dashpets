@@ -20,11 +20,13 @@ export type Sprites = {
 
 export type SpriteList = string[]
 
+export type DataPoint = Record<string, (boolean | string | number)>
+
 export type Pet = {
   name: string,
+  dataPoint: DataPoint,
   position: Vec2,
-  width: number,
-  height: number,
+  dimensions: Vec2,
   speed: PetType["speed"],
   canFly: PetType["canFly"],
   animationFrame: number,

@@ -33,11 +33,18 @@
     <h2>Enable Y Axis</h2>
     <label> <input type="checkbox" id="enableYAxis" /> Enable Y axis for pets</label>
     <br />
+    <h2>Pet Size</h2>
+    <label> <input type="number" id="petSizePixels" /> The size of a pet (In pixels) </label>
+    <br />
     <h2>Random Size</h2>
-    <label>
-      <input type="checkbox" id="enableRandomSize" /> Enable random size. For fun for now, lets replace with a
-      measure</label
-    >
+    <label> <input type="checkbox" id="enableRandomSize" /> Enable random size. (Overwrites the size measure)</label>
+    <br />
+    <h2>Dynamic Size Settings</h2>
+    <label> <input type="number" id="minSizePercent" /> Minimum pet scalar. (In percent) </label>
+    <br />
+    <label> <input type="number" id="maxSizePercent" /> Maximum pet scalar. (In percent) </label>
+    <br />
+
     <br />
     <button id="saveButton">Save</button>
     <button id="cancelButton">Cancel</button>

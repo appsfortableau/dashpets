@@ -1,10 +1,13 @@
 import './style.css';
+import messages from '@/petMessages.json' with { type: "json" };
 import '@/utils/strings';
-import { Pet, PetType, Vec2 } from '@/types/pet';
+import { DataPoint, Pet, PetType, Vec2 } from '@/types/pet';
 import '@/utils/tableau.extensions.1.latest.min.js';
 import { getEncodings, getSummaryDataTable, openConfig } from '@/utils/tableau/data';
 import { immediateThenDebounce } from '@/utils/debounce.js';
-import { getStoredTableauSettings } from './utils/tableau/settings';
+import { getStoredTableauSettings } from '@/utils/tableau/settings';
+import { lerp } from '@/utils/lerp';
+import { petTypes } from '@/petTypes';
 
 tableau.extensions.initializeAsync({ configure: openConfig }).then(() => {
   const worksheet = tableau.extensions.worksheetContent?.worksheet!;
@@ -25,193 +28,19 @@ tableau.extensions.initializeAsync({ configure: openConfig }).then(() => {
   async function updateDataAndRender() {
     const settings = getStoredTableauSettings()
     // set to true to use the Y axis as well
-    let useYcoords = settings.displaySettings.enableYAxis;
+    const useYcoords = settings.displaySettings.enableYAxis;
     // just for fun for now, lets change it to a measure of Tableau
-    let useRandomSize = settings.displaySettings.enableRandomSize;
+    const useRandomSize = settings.dynamicSizeSettings.enableRandomSize;
+    const petSize = settings.displaySettings.petSizePixels
 
     const fields = await getEncodings(worksheet);
+    // NOTE: Is it possible for the size measure to have a limit to 1 column in the trex?
+    const sizeMeasure = fields?.["size"]?.[0] ?? ""
 
     // TODO: What if data is null?
     const data = await getSummaryDataTable(worksheet)!;
-    let selected: string[] = [];
-    // Pet data - define different pet types with unique images
-    const petTypes: Record<string, PetType> = {
-      dog: {
-        asset: 'dog',
-        canFly: false,
-        speed: 1,
-        aspectRatio: { x: 1, y: 0.66 },
-        sprites: {
-          walk: ['walk1.png', 'walk2.png'],
-          run: ['walk1.png', 'walk2.png'],
-          sit: ['sit1.png', 'sit2.png'],
-          sleep: ['sleep1.png', 'sleep2.png'],
-        }
-      },
-      dog_black: {
-        asset: 'dog_black',
-        canFly: false,
-        speed: 1,
-        aspectRatio: { x: 1, y: 0.66 },
-        sprites: {
-          walk: ['walk1.png', 'walk2.png'],
-          run: ['run1.png', 'run2.png'],
-          sit: [
-            'sit1.png',
-            'sit2.png',
-            'sit2.png',
-            'sit2.png',
-            'sit2.png',
-            'sit2.png',
-            'sit1.png',
-            'sit1.png',
-            'sit2.png',
-            'sit2.png',
-            'sit2.png',
-            'sit2.png',
-            'sit2.png',
-          ],
-          sleep: ['sleep1.png', 'sleep2.png', 'sleep2.png', 'sleep2.png', 'sleep2.png'],
-        }
-      },
-      chicken: {
-        asset: 'chicken',
-        canFly: false,
-        speed: 0.6,
-        aspectRatio: { x: 0.85, y: 1 },
-        sprites: {
-          walk: ['walk1.gif', 'walk2.gif', 'walk3.gif'],
-          run: ['run1.gif', 'run2.gif', 'run3.gif'],
-          sit: ['sit.gif'],
-          sleep: ['sleep.gif'],
-        }
-      },
-      cat: {
-        asset: 'cat',
-        canFly: false,
-        speed: 1.5,
-        aspectRatio: { x: 1, y: 0.92 },
-        sprites: {
-          walk: ['walk1.gif', 'walk2.gif'],
-          run: ['walk1.gif', 'walk2.gif'],
-          sit: ['sit1.png'],
-          sleep: ['sleep1.png', 'sleep2.png'],
-        }
-      },
-      // bird: {
-      //   asset: 'bird',
-      //   canFly: true,
-      //   speed: 1,
-      //   aspectRatio: { x: 1, y: 0.92 },
-      //   sprites: {
-      //     walk: ['walk.gif'],
-      //     run: ['walk.gif'],
-      //     sit: ['walk.gif'],
-      //     sleep: ['walk.gif'],
-      //   }
-      // },
-      crab: {
-        asset: 'crab',
-        canFly: false,
-        speed: 0.3,
-        aspectRatio: { x: 1, y: 0.76 },
-        sprites: {
-          walk: ['walk1.gif', 'walk2.gif', 'walk3.gif', 'walk4.gif', 'walk5.gif'],
-          run: ['walk1.gif', 'walk2.gif', 'walk3.gif', 'walk4.gif', 'walk5.gif'],
-          sit: ['walk1.gif'],
-          sleep: ['walk1.gif'],
-        }
-      },
-      shark: {
-        asset: 'shark',
-        canFly: false,
-        speed: 0.3,
-        aspectRatio: { x: 1, y: 0.225 },
-        sprites: {
-          walk: ['walk1.png'],
-          run: ['run1.png'],
-          sit: ['walk1.png'],
-          sleep: ['walk1.png'],
-        }
-      },
-      guineapig: {
-        asset: 'guineapig',
-        canFly: false,
-        speed: 0.1,
-        aspectRatio: { x: 1, y: 0.56 },
-        sprites: {
-          walk: ['walk1.png', 'sit1.png'],
-          run: ['walk1.png', 'sit1.png'],
-          sit: ['sit1.png'],
-          sleep: ['sleep1.png'],
-        }
-      },
-      rat: {
-        asset: 'rat',
-        canFly: false,
-        speed: 1,
-        aspectRatio: { x: 1, y: 0.56 },
-        sprites: {
-          walk: ['walk1.png'],
-          run: ['walk1.png'],
-          sit: ['sit1.png'],
-          sleep: ['sleep1.png'],
-        }
-      },
-    };
-
-    const includeData = data?.columns.map(col => fields["dimension"]?.includes(col.fieldName)) ?? []
-
-    // GET FROM TABLEAU
-    // Data from tableau is not strongly typed
-    // Only the dimensions are needed because they define the datapoints
-    const petsData = Array.from(new Set(data?.data.map((row) => {
-      return row.map((data, i) => includeData[i] ? data.value : "").filter(Boolean).join("🚰");
-    }) ?? []));
-
+    const selected: string[] = [];
     const pets: Pet[] = [];
-    const messages = [
-      '👋', // wave hand emoji
-      'Hello!',
-      'I love SuperTables!',
-      'WriteBackExtreme is cool 😎',
-      'My Sales is above target!',
-      'I love Apps for Tableau 😍',
-      'VizExtensions Woofs!',
-      '🐾',
-      'Keep going!',
-      'Did you feed me today?',
-      'I need a nap. 💤',
-      'What a beautiful day! ☀️',
-      'Where’s my treat? 🍖',
-      'I saw a bird earlier. 🐦',
-      'Can we play fetch? 🎾',
-      'Life is pawsome! 🐕',
-      'I’m fur-tastic!',
-      'Let’s go for a walk! 🚶‍♂️',
-      'My tail is the best thing ever. 🐕',
-      'What’s for dinner? 🍗',
-      'Did you see my cool trick? 🤸',
-      'I’m thinking… 🤔',
-      'Let’s chase squirrels! 🐿️',
-      'Can I get a belly rub? 🙃',
-      'Is it snack time yet? 🍪',
-      'Look at me, I’m adorable! 😍',
-      'I love being your pet! 💖',
-      'Did you hear that noise? 👂',
-      'Adventure time! 🗺️',
-      'Can I have some cheese? 🧀',
-      'Zoomies incoming! 🌀',
-      'I’m on patrol! 👮',
-      'Everything’s better with pets. 🐾',
-      'I’m a good pet! 🥰',
-      'Tail wags for everyone! 🐕',
-      'Oops, I got distracted. 🐾',
-      'Sunbathing is my favorite hobby. ☀️',
-      'I’m watching you. 👀',
-      'What’s that smell? 👃',
-      'Nap time is calling! 🛌',
-    ];
 
     function loadImage(src: string, petType: PetType): HTMLImageElement {
       const img = new Image();
@@ -236,9 +65,48 @@ tableau.extensions.initializeAsync({ configure: openConfig }).then(() => {
       return petTypesArr[petIndex]
     }
 
-    function createPet(name: string, position: Vec2): Pet {
-      let randomSize = Math.random();
+    function calculateSize(aspectRatio: number, sizeScalar: number) {
+      const ratioPetSize = petSize * aspectRatio;
+      const minSize = (settings.dynamicSizeSettings.minSizePercent / 100) * ratioPetSize
+      const maxSize = (settings.dynamicSizeSettings.maxSizePercent / 100) * ratioPetSize
+
+      return lerp(minSize, maxSize, sizeScalar)
+    }
+
+
+    function getPetDimensions(dataPoint: DataPoint, type: PetType): Vec2 {
+      let sizeScalar = 0;
+
+      if (useRandomSize) {
+        sizeScalar = Math.random()
+      } else if (sizeMeasure) {
+        const dataPointValue = dataPoint[sizeMeasure]
+        if (typeof dataPointValue === "number") {
+          sizeScalar = (dataPointValue - sizeMeasureMinMax.min) / (sizeMeasureMinMax.max - sizeMeasureMinMax.min)
+        } else {
+          console.error(`Could not find data point value of ${sizeMeasure}`, dataPoint)
+        }
+      } else {
+        return {
+          x: petSize * type.aspectRatio.x,
+          y: petSize * type.aspectRatio.y
+        }
+      }
+
+      return {
+        x: calculateSize(type.aspectRatio.x, sizeScalar),
+        y: calculateSize(type.aspectRatio.y, sizeScalar)
+      }
+    }
+
+    function getNameFromDataPoint(dataPoint: DataPoint): string {
+      return Object.values(dataPoint).map((value, i) => indexToIsDimensionMap[i] ? value : "").filter(Boolean).join("🚰")
+    }
+
+    function createPet(dataPoint: DataPoint, position: Vec2): Pet {
+      const name = getNameFromDataPoint(dataPoint);
       const petType = getPetTypeFromHash(name);
+      const dimensions = getPetDimensions(dataPoint, petType);
       const images = {
         walk: petType.sprites.walk.map((src) => loadImage(src, petType)),
         run: petType.sprites.run.map((src) => loadImage(src, petType)),
@@ -248,7 +116,7 @@ tableau.extensions.initializeAsync({ configure: openConfig }).then(() => {
 
       const petPosition = {
         x: position.x,
-        y: position.y - (useRandomSize ? randomSize * 50 : 50) * petType.aspectRatio.y,
+        y: position.y - dimensions.y,
       }
 
       const direction: Vec2 = {
@@ -257,10 +125,10 @@ tableau.extensions.initializeAsync({ configure: openConfig }).then(() => {
       }
 
       const pet: Pet = {
+        dataPoint,
         name: name,
         position: petPosition,
-        width: (useRandomSize ? randomSize * 50 : 50) * petType.aspectRatio.x,
-        height: (useRandomSize ? randomSize * 50 : 50) * petType.aspectRatio.y,
+        dimensions,
         speed: petType.speed,
         canFly: petType.canFly,
         animationFrame: 0,
@@ -290,9 +158,39 @@ tableau.extensions.initializeAsync({ configure: openConfig }).then(() => {
       }
     }
 
+    const indexToFieldNameMap = data?.columns.map(col => col.fieldName) ?? []
+    const indexToIsDimensionMap = data?.columns.map(col => fields["dimension"]?.includes(col.fieldName)) ?? [];
+    // GET FROM TABLEAU
+    // Data from tableau is not strongly typed
+    // Only the dimensions are needed because they define the datapoints
+    const petsData = Array.from(new Set(data?.data.map((row) => {
+      return row.map((data, i) => [indexToFieldNameMap[i], data.value]);
+    }) ?? [])).map(entries => Object.fromEntries(entries) as DataPoint);
+
+    const sizeMeasureMinMax = {
+      min: Number.MAX_SAFE_INTEGER,
+      max: Number.MIN_SAFE_INTEGER
+    }
+
+    if (sizeMeasure) {
+      petsData.forEach(point => {
+        const sizeMeasureValue = point[sizeMeasure] ?? 0
+        if (typeof sizeMeasureValue !== "number") {
+          return
+        }
+
+        if (sizeMeasureValue < sizeMeasureMinMax.min) {
+          sizeMeasureMinMax.min = sizeMeasureValue;
+        }
+        if (sizeMeasureValue > sizeMeasureMinMax.max) {
+          sizeMeasureMinMax.max = sizeMeasureValue;
+        }
+      })
+    }
+
     // Create each pet from petsData and add to pets array
-    petsData.forEach((name) => {
-      const pet: Pet = createPet(name.toString(), getInitialPetPosition());
+    petsData.forEach((dataPoint) => {
+      const pet: Pet = createPet(dataPoint, getInitialPetPosition());
 
       pets.push(pet);
     });
@@ -364,8 +262,8 @@ tableau.extensions.initializeAsync({ configure: openConfig }).then(() => {
         pet.position.x = 0;
         pet.direction.x = 1;
       }
-      if (pet.position.x + pet.width >= canvas.width) {
-        pet.position.x = canvas.width - pet.width;
+      if (pet.position.x + pet.dimensions.x >= canvas.width) {
+        pet.position.x = canvas.width - pet.dimensions.x;
         pet.direction.x = -1;
       }
       if (useYcoords || pet.canFly) {
@@ -373,8 +271,8 @@ tableau.extensions.initializeAsync({ configure: openConfig }).then(() => {
           pet.position.y = 0;
           pet.direction.y = 1;
         }
-        if (pet.position.y + pet.height >= canvas.height) {
-          pet.position.y = canvas.height - pet.height;
+        if (pet.position.y + pet.dimensions.y >= canvas.height) {
+          pet.position.y = canvas.height - pet.dimensions.y;
           pet.direction.y = -1;
         }
       }
@@ -386,7 +284,7 @@ tableau.extensions.initializeAsync({ configure: openConfig }).then(() => {
         ctx.fillStyle = 'white';
 
         const textWidth = ctx.measureText(pet.tooltip).width;
-        const tooltipX = pet.position.x + pet.width / 2 - textWidth / 2 - 10;
+        const tooltipX = pet.position.x + pet.dimensions.x / 2 - textWidth / 2 - 10;
         const tooltipY = pet.position.y - 30;
 
         // Pixelated border
@@ -407,16 +305,16 @@ tableau.extensions.initializeAsync({ configure: openConfig }).then(() => {
           // Draw a black border around the pet
           ctx.strokeStyle = 'black';
           ctx.lineWidth = 1;
-          ctx.strokeRect(pet.position.x - 1, pet.position.y - 1, pet.width + 2, pet.height + 2);
+          ctx.strokeRect(pet.position.x - 1, pet.position.y - 1, pet.dimensions.x + 2, pet.dimensions.y + 2);
         }
         ctx.save();
 
         if (pet.direction.x === -1) {
-          ctx.translate(pet.position.x + pet.width, pet.position.y);
+          ctx.translate(pet.position.x + pet.dimensions.x, pet.position.y);
           ctx.scale(-1, 1);
-          ctx.drawImage(pet.currentImage, 0, 0, pet.width, pet.height);
+          ctx.drawImage(pet.currentImage, 0, 0, pet.dimensions.x, pet.dimensions.y);
         } else {
-          ctx.drawImage(pet.currentImage, pet.position.x, pet.position.y, pet.width, pet.height);
+          ctx.drawImage(pet.currentImage, pet.position.x, pet.position.y, pet.dimensions.x, pet.dimensions.y);
         }
 
         ctx.restore();
@@ -449,7 +347,7 @@ tableau.extensions.initializeAsync({ configure: openConfig }).then(() => {
         const mouseY = e.clientY - rect.top;
         const didDrawTooltip = pets.some((pet, index) => {
           let tooltipAlreadyActive = !!pet.hover;
-          pet.hover = mouseX >= pet.position.x && mouseX <= pet.position.x + pet.width && mouseY >= pet.position.y && mouseY <= pet.position.y + pet.height;
+          pet.hover = mouseX >= pet.position.x && mouseX <= pet.position.x + pet.dimensions.x && mouseY >= pet.position.y && mouseY <= pet.position.y + pet.dimensions.y;
 
           if (pet.hover) {
             canvas.style.cursor = 'pointer';
@@ -485,7 +383,7 @@ tableau.extensions.initializeAsync({ configure: openConfig }).then(() => {
 
       pets.forEach((pet) => {
         // Check if the click is within the pet's bounding box
-        if (clickX >= pet.position.x && clickX <= pet.position.x + pet.width && clickY >= pet.position.y && clickY <= pet.position.y + pet.height) {
+        if (clickX >= pet.position.x && clickX <= pet.position.x + pet.dimensions.x && clickY >= pet.position.y && clickY <= pet.position.y + pet.dimensions.y) {
           pet.selected = !pet.selected; // Toggle selection
           if (pet.selected) {
             selected.push(pet.name);

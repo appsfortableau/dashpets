@@ -29,8 +29,8 @@
       <encoding-icon token="letter-d" />
       <tooltip>Dimension Columns can be added here</tooltip>
     </encoding>
-    <!-- <encoding id="measures">
-      <display-name>Measures</display-name>
+    <encoding id="size">
+      <display-name>Size</display-name>
       <data-spec>
         <data-type>numeric</data-type>
       </data-spec>
@@ -38,9 +38,9 @@
         <role-type>continuous-measure</role-type>
         <role-type>discrete-measure</role-type>
       </role-spec>
-      <encoding-icon token="letter-m" />
-      <tooltip>Measure Columns can be added here</tooltip>
-    </encoding> -->
+      <encoding-icon token="letter-s" />
+      <tooltip>The measure that determines the size of the pets.</tooltip>
+    </encoding>
   </worksheet-extension>
   <resources>
     <resource id="name">
