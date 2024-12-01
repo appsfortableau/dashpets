@@ -1,9 +1,10 @@
 import './style.css';
-import './utils/strings';
-import { Pet, PetType, Vec2 } from './types';
-import './utils/tableau.extensions.1.latest.min.js';
-import { getEncodings, getSummaryDataTable, openConfig } from './utils/tableau';
-import { immediateThenDebounce } from './utils/debounce.js';
+import '@/utils/strings';
+import { Pet, PetType, Vec2 } from '@/types/pet';
+import '@/utils/tableau.extensions.1.latest.min.js';
+import { getEncodings, getSummaryDataTable, openConfig } from '@/utils/tableau/data';
+import { immediateThenDebounce } from '@/utils/debounce.js';
+import { getStoredTableauSettings } from './utils/tableau/settings';
 
 tableau.extensions.initializeAsync({ configure: openConfig }).then(() => {
   const worksheet = tableau.extensions.worksheetContent?.worksheet!;
@@ -22,12 +23,11 @@ tableau.extensions.initializeAsync({ configure: openConfig }).then(() => {
   canvas.height = window.innerHeight;
 
   async function updateDataAndRender() {
-    let settings = tableau.extensions.settings.getAll();
-    settings = 'settings' in settings ? JSON.parse(settings.settings) : {};
+    const settings = getStoredTableauSettings()
     // set to true to use the Y axis as well
-    let useYcoords = settings.enableYAxis;
+    let useYcoords = settings.displaySettings.enableYAxis;
     // just for fun for now, lets change it to a measure of Tableau
-    let useRandomSize = settings.enableRandomSize;
+    let useRandomSize = settings.displaySettings.enableRandomSize;
 
     const fields = await getEncodings(worksheet);
 
@@ -160,7 +160,7 @@ tableau.extensions.initializeAsync({ configure: openConfig }).then(() => {
       },
     };
 
-    const includeData = data?.columns.map(col => fields["dimension"].includes(col.fieldName)) ?? []
+    const includeData = data?.columns.map(col => fields["dimension"]?.includes(col.fieldName)) ?? []
 
     // GET FROM TABLEAU
     // Data from tableau is not strongly typed
@@ -308,7 +308,7 @@ tableau.extensions.initializeAsync({ configure: openConfig }).then(() => {
       const globalTooltipFactor = Math.max(1, pets.length); // Prevent division by zero
       const tooltipChance = 0.2 / globalTooltipFactor;
       // Check if it's time to show a new tooltip
-      if (settings.tooltipsEnabled) {
+      if (settings.displaySettings.enableTooltips) {
         if (pet.tooltipTimer >= pet.tooltipCooldown) {
           if (Math.random() < tooltipChance) {
             // 30% chance to say something
