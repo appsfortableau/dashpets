@@ -52,6 +52,19 @@ const catDefaults: Omit<PetType, "asset"> = {
   }
 }
 
+export const Egg: PetType = {
+  asset: 'egg',
+  canFly: false,
+  speed: 0,
+  aspectRatio: { x: 1, y: 1 },
+  sprites: {
+    walk: ['egg_0.png'],
+    run: ['egg_0.png'],
+    sleep: ['egg_0.png', 'egg_1.png', 'egg_2.png', 'egg_3.png', 'egg_4.png'],
+    sit: ['egg_5.png', 'egg_6.png', 'egg_7.png', 'egg_8.png', 'egg_9.png', 'egg_10.png', 'egg_11.png'],
+  },
+}
+
 export const petTypes: Record<string, PetType> = {
   dog: {
     asset: 'dog',
