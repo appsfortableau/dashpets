@@ -41,6 +41,18 @@
       <encoding-icon token="letter-s" />
       <tooltip>The measure that determines the size of the pets.</tooltip>
     </encoding>
+    <encoding id="target">
+      <display-name>Target</display-name>
+      <data-spec>
+        <data-type>numeric</data-type>
+      </data-spec>
+      <role-spec>
+        <role-type>continuous-measure</role-type>
+        <role-type>discrete-measure</role-type>
+      </role-spec>
+      <encoding-icon token="letter-t" />
+      <tooltip>The measure that has te percent target reached (from 0 to 1, if 1 target is reached).</tooltip>
+    </encoding>
   </worksheet-extension>
   <resources>
     <resource id="name">

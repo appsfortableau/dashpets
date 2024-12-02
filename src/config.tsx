@@ -10,7 +10,6 @@ document.addEventListener('DOMContentLoaded', () => {
   // Initialize Tableau Extensions
   tableau.extensions.initializeDialogAsync().then(() => {
     const settings = getStoredTableauSettings();
-    console.log(settings)
     setAllSettings(settings)
 
     // Save button functionality

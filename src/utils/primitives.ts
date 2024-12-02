@@ -10,3 +10,10 @@ String.prototype.hashCode = function() {
   return hash;
 }
 
+export function isNumber(a: any): a is number {
+  return typeof a === "number" && isFinite(a)
+}
+
+export function clamp(value: number, min: number, max: number): number {
+  return Math.max(min, Math.min(value, max));
+}

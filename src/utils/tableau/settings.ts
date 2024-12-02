@@ -46,15 +46,12 @@ export function storeSettingsInTableau(settings: RecursivePartial<PetsSettings>)
 
   const settingsToStore = onlyKeepChangedSettings(settings, defaultSettings)
 
-  console.log("storing settings:", settingsToStore);
-
   tableau.extensions.settings.set('settings', JSON.stringify(settingsToStore));
 
   return tableau.extensions.settings.saveAsync()
 }
 
 function onlyKeepChangedSettings<T>(settings: any, defaultSettings: T): (T | Partial<T> | null) {
-  console.log("checking:", settings, defaultSettings)
   if (typeof settings !== typeof defaultSettings) {
     return null
   }

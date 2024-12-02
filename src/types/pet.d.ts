@@ -26,11 +26,12 @@ export type Pet = {
   name: string,
   dataPoint: DataPoint,
   position: Vec2,
+  startPosition: Vec2,
   dimensions: Vec2,
   speed: PetType["speed"],
   canFly: PetType["canFly"],
   animationFrame: number,
-  state: keyof Sprites,
+  state: (keyof Sprites | "hatching"),
   hover: boolean,
   selected: boolean,
   direction: Vec2,
@@ -45,4 +46,5 @@ export type Pet = {
   // Timer for showing a new message
   tooltipTimer: number,
   tooltipCooldown: number,
+  eggCompletion: number,
 }

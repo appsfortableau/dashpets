@@ -1,19 +1,29 @@
 import './style.css';
 import messages from '@/petMessages.json' with { type: "json" };
-import '@/utils/strings';
+import '@/utils/primitives';
 import { DataPoint, Pet, PetType, Vec2 } from '@/types/pet';
 import '@/utils/tableau.extensions.1.latest.min.js';
 import { getEncodings, getSummaryDataTable, openConfig } from '@/utils/tableau/data';
 import { debounce, immediateThenDebounce } from '@/utils/debounce.js';
 import { getStoredTableauSettings } from '@/utils/tableau/settings';
-import { lerp } from '@/utils/lerp';
-import { petTypes } from '@/petTypes';
+import { lerp, unlerp } from '@/utils/lerp';
+import { Egg, petTypes } from '@/petTypes';
+import { clamp, isNumber } from '@/utils/primitives';
 
 tableau.extensions.initializeAsync({ configure: openConfig }).then(() => {
+  function loadImage(src: string, assetFolder: string): HTMLImageElement {
+    const img = new Image();
+    // TODO resolve correct folder for the pet.
+    img.src = 'assets/' + assetFolder + '/' + src;
+    return img;
+  }
+
   const worksheet = tableau.extensions.worksheetContent?.worksheet!;
   if (!worksheet) {
     return; // no worksheet
   }
+  const nameSplitCharacter = "🚰";
+  const eggHatchingImages = Egg.sprites.sit.map(src => loadImage(src, "egg"));
 
 
   const canvas = document.getElementById('gameCanvas')! as HTMLCanvasElement;
@@ -39,18 +49,13 @@ tableau.extensions.initializeAsync({ configure: openConfig }).then(() => {
     const fields = await getEncodings(worksheet);
     // NOTE: Is it possible for the size measure to have a limit to 1 column in the trex?
     const sizeMeasure = fields?.["size"]?.[0] ?? ""
+    const targetMeasure = fields?.["target"]?.[0] ?? ""
 
     // TODO: What if data is null?
     const data = await getSummaryDataTable(worksheet)!;
     const selected: string[] = [];
     const pets: Pet[] = [];
 
-    function loadImage(src: string, petType: PetType): HTMLImageElement {
-      const img = new Image();
-      // TODO resolve correct folder for the pet.
-      img.src = 'assets/' + petType.asset + '/' + src;
-      return img;
-    }
 
     // Helper function to randomly select a pet type
     // function getRandomPetType(): PetType {
@@ -85,7 +90,7 @@ tableau.extensions.initializeAsync({ configure: openConfig }).then(() => {
       } else if (sizeMeasure) {
         const dataPointValue = dataPoint[sizeMeasure]
         if (typeof dataPointValue === "number") {
-          sizeScalar = (dataPointValue - sizeMeasureMinMax.min) / (sizeMeasureMinMax.max - sizeMeasureMinMax.min)
+          sizeScalar = unlerp(sizeMeasureMinMax.min, sizeMeasureMinMax.max, dataPointValue)
         } else {
           console.error(`Could not find data point value of ${sizeMeasure}`, dataPoint)
         }
@@ -103,20 +108,38 @@ tableau.extensions.initializeAsync({ configure: openConfig }).then(() => {
     }
 
     function getNameFromDataPoint(dataPoint: DataPoint): string {
-      return Object.values(dataPoint).map((value, i) => indexToIsDimensionMap[i] ? value : "").filter(Boolean).join("🚰")
+      return Object.values(dataPoint).map((value, i) => dataPointIndexToIsDimensionMap[i] ? value : "").filter(Boolean).join(nameSplitCharacter);
+    }
+
+    function getTargetValue(dataPoint: DataPoint): number | null {
+      if (!targetMeasure) {
+        return null;
+      }
+
+      let targetValue = dataPoint?.[targetMeasure] ?? null
+
+      if (isNumber(targetValue)) {
+        return targetValue
+      }
+
+      return null
     }
 
     function createPet(dataPoint: DataPoint, position: Vec2): Pet {
       const name = getNameFromDataPoint(dataPoint);
-      const petType = getPetTypeFromHash(name);
+      const eggCompletion = clamp(getTargetValue(dataPoint) ?? 1, 0, 1);
+      const isEgg = eggCompletion < 1;
+      const petType = isEgg ? Egg : getPetTypeFromHash(name);
       const dimensions = getPetDimensions(dataPoint, petType);
       const direction = getRandomDirection();
       const images = {
-        walk: petType.sprites.walk.map((src) => loadImage(src, petType)),
-        run: petType.sprites.run.map((src) => loadImage(src, petType)),
-        sit: petType.sprites.sit.map((src) => loadImage(src, petType)),
-        sleep: petType.sprites.sleep.map((src) => loadImage(src, petType)),
+        walk: petType.sprites.walk.map((src) => loadImage(src, petType.asset)),
+        run: petType.sprites.run.map((src) => loadImage(src, petType.asset)),
+        sit: petType.sprites.sit.map((src) => loadImage(src, petType.asset)),
+        sleep: petType.sprites.sleep.map((src) => loadImage(src, petType.asset)),
       }
+      const eggImage = images.sleep[Math.round(lerp(0, images.sleep.length - 1, eggCompletion))];
+      console.log(eggImage, eggCompletion, lerp(0, images.sleep.length - 1, eggCompletion))
 
       const petPosition = {
         x: position.x,
@@ -127,16 +150,17 @@ tableau.extensions.initializeAsync({ configure: openConfig }).then(() => {
         dataPoint,
         name: name,
         position: petPosition,
+        startPosition: Object.assign({}, petPosition),
         dimensions,
         speed: petType.speed,
         canFly: petType.canFly,
         animationFrame: 0,
-        state: 'walk',
+        state: isEgg ? 'sleep' : 'hatching',
         hover: false,
         selected: false,
         direction,
         images,
-        currentImage: images.walk[0],
+        currentImage: isEgg ? eggImage : images.walk[0],
         animationTimer: 0,
         animationDelay: 300,
         idleTime: 0,
@@ -144,6 +168,7 @@ tableau.extensions.initializeAsync({ configure: openConfig }).then(() => {
         tooltip: '',
         tooltipTimer: 0,
         tooltipCooldown: Math.random() * 20000 + 5000,
+        eggCompletion,
       };
 
       return pet;
@@ -180,13 +205,13 @@ tableau.extensions.initializeAsync({ configure: openConfig }).then(() => {
       return { x: dirX, y: dirY }
     }
 
-    const indexToFieldNameMap = data?.columns.map(col => col.fieldName) ?? []
-    const indexToIsDimensionMap = data?.columns.map(col => fields["dimension"]?.includes(col.fieldName)) ?? [];
+    const dataPointIndexToFieldNameMap = data?.columns.map(col => col.fieldName) ?? []
+    const dataPointIndexToIsDimensionMap = data?.columns.map(col => fields["dimension"]?.includes(col.fieldName)) ?? [];
     // GET FROM TABLEAU
     // Data from tableau is not strongly typed
     // Only the dimensions are needed because they define the datapoints
     const petsData = Array.from(new Set(data?.data.map((row) => {
-      return row.map((data, i) => [indexToFieldNameMap[i], data.value]);
+      return row.map((data, i) => [dataPointIndexToFieldNameMap[i], data.value]);
     }) ?? [])).map(entries => Object.fromEntries(entries) as DataPoint);
 
     const sizeMeasureMinMax = {
@@ -240,13 +265,18 @@ tableau.extensions.initializeAsync({ configure: openConfig }).then(() => {
           pet.tooltipCooldown = Math.random() * 3000 + 1000; // Random cooldown (5-25 seconds)
         }
       }
+
+      if (pet.eggCompletion < 1) {
+        return;
+      }
+
       if (pet.hover) {
         pet.idleTime = 0;
         return;
       }
       pet.idleTime += deltaTime;
 
-      if (pet.idleTime > pet.idleTimeLimit) {
+      if (pet.idleTime > pet.idleTimeLimit && pet.state !== "hatching") {
         const random = Math.random();
         if (random < 0.3) {
           pet.state = 'sit';
@@ -266,10 +296,19 @@ tableau.extensions.initializeAsync({ configure: openConfig }).then(() => {
       pet.animationTimer += deltaTime;
       if (pet.animationTimer > pet.animationDelay) {
         pet.animationTimer = 0;
-        // if (pet.state === 'walk' || pet.state === 'run') {
-        pet.animationFrame = (pet.animationFrame + 1) % pet.images[pet.state].length;
-        pet.currentImage = pet.images[pet.state][pet.animationFrame];
-        // }
+        if (pet.state === "hatching") {
+          if (pet.animationFrame === eggHatchingImages.length - 1) {
+            pet.state = 'sit';
+          } else {
+            pet.animationFrame = (pet.animationFrame + 1) % eggHatchingImages.length
+            pet.currentImage = eggHatchingImages[pet.animationFrame]
+          }
+        } else {
+          // if (pet.state === 'walk' || pet.state === 'run') {
+          pet.animationFrame = (pet.animationFrame + 1) % pet.images[pet.state].length;
+          pet.currentImage = pet.images[pet.state][pet.animationFrame];
+          // }
+        }
       }
 
       if (pet.state === 'walk' || pet.state === 'run') {
@@ -322,6 +361,15 @@ tableau.extensions.initializeAsync({ configure: openConfig }).then(() => {
 
     function drawPet(pet: Pet) {
       if (pet.currentImage && pet.currentImage.complete) {
+        if (pet.state !== 'hatching') {
+          const lastHatchingImage = eggHatchingImages[eggHatchingImages.length - 1]
+          if (lastHatchingImage) {
+            ctx.drawImage(lastHatchingImage, pet.startPosition.x, pet.startPosition.y, pet.dimensions.x, pet.dimensions.y);
+          }
+        } else if (pet.eggCompletion >= 1) {
+          ctx.drawImage(pet.images.sleep[0], pet.position.x + pet.dimensions.x / 2, pet.position.y + pet.dimensions.y / 2, pet.dimensions.x / 2, pet.dimensions.y / 2);
+        }
+
         if (pet.selected) {
           // Draw a black border around the pet
           ctx.strokeStyle = 'black';
