@@ -11,6 +11,7 @@ export class DynamicSizeSettings {
 }
 
 class DisplaySettings {
+  public backgroundColor: string = '#ffffff';
   public enableYAxis: boolean = false;
   public enableTooltips: boolean = true;
 

@@ -24,9 +24,18 @@
       button:disabled {
         background-color: #cfcfcf;
       }
+      input[type='color'] {
+        display: block;
+        margin-top: 5px;
+        padding: 5px;
+        width: 100%;
+      }
     </style>
   </head>
   <body>
+    <h2>Colors</h2>
+    <label for="backgroundColor">Background Color:</label>
+    <input type="color" id="backgroundColor" value="#ffffff" />
     <h2>Tooltip Settings</h2>
     <label> <input type="checkbox" id="enableTooltips" /> Enable Tooltips </label>
     <br />

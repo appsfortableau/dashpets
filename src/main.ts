@@ -32,6 +32,14 @@ tableau.extensions.initializeAsync({ configure: openConfig }).then(() => {
     const settings = getStoredTableauSettings()
     // set to true to use the Y axis as well
     const useYcoords = settings.displaySettings.enableYAxis;
+    const backgroundColor = settings.displaySettings.backgroundColor
+    function setCanvasBackground(color: string) {
+      ctx.fillStyle = color; // Set the fill style to the background color
+      ctx.fillRect(0, 0, canvas.width, canvas.height); // Fill the entire canvas
+    }
+    
+    // Apply the background color from settings
+    setCanvasBackground(backgroundColor);
     // just for fun for now, lets change it to a measure of Tableau
     const useRandomSize = settings.dynamicSizeSettings.enableRandomSize;
     const petSize = settings.displaySettings.petSizePixels
@@ -346,7 +354,7 @@ tableau.extensions.initializeAsync({ configure: openConfig }).then(() => {
 
     function gameLoop() {
       ctx.clearRect(0, 0, canvas.width, canvas.height);
-
+      setCanvasBackground(backgroundColor)
       const currentTime = Date.now();
       const deltaTime = currentTime - lastUpdateTime;
       lastUpdateTime = currentTime;
@@ -373,6 +381,7 @@ tableau.extensions.initializeAsync({ configure: openConfig }).then(() => {
           pet.hover = mouseX >= pet.position.x && mouseX <= pet.position.x + pet.dimensions.x && mouseY >= pet.position.y && mouseY <= pet.position.y + pet.dimensions.y;
 
           if (pet.hover) {
+            console.log('hovering pet')
             canvas.style.cursor = 'pointer';
             if (!tooltipAlreadyActive) {
               const myHoveredTuple = index + 1;
@@ -386,6 +395,7 @@ tableau.extensions.initializeAsync({ configure: openConfig }).then(() => {
         });
 
         if (!didDrawTooltip) {
+          console.log('deze')
           // If we get here the cursor is not on a pet so we can remove the tooltip
           canvas.style.cursor = 'default';
           window?.tableau?.extensions?.worksheetContent?.worksheet.hoverTupleAsync(99999999999, {

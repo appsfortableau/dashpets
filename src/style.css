@@ -4,11 +4,9 @@
 }
 
 html {
-  background-color: rgba(0, 0, 0, 0);
 }
 body {
   display: flex;
-  background-color: rgba(0, 0, 0, 0);
   justify-content: center;
   align-items: center;
   height: 100vh;
