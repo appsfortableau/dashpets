@@ -15,5 +15,5 @@ class DisplaySettings {
   public enableYAxis: boolean = false;
   public enableTooltips: boolean = true;
 
-  public petSizePixels: number = 50;
+  public petSizePixels: number = 75;
 }

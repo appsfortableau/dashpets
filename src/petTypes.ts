@@ -1,43 +1,81 @@
-import { PetType } from './types/pet';
+import { PetType, Sprites } from './types/pet';
+
+const dogDefaults: Omit<PetType, "asset"> = {
+  canFly: false,
+  speed: 1,
+  aspectRatio: { x: 1, y: 0.84 },
+  sprites: {
+    walk: ['walk1.png', 'walk2.png'],
+    run: ['run1.png', 'run2.png'],
+    sit: [
+      'sit1.png',
+      'sit2.png',
+      'sit2.png',
+      'sit2.png',
+      'sit2.png',
+      'sit2.png',
+      'sit1.png',
+      'sit1.png',
+      'sit2.png',
+      'sit2.png',
+      'sit2.png',
+      'sit2.png',
+      'sit2.png',
+    ],
+    sleep: ['sleep1.png', 'sleep2.png', 'sleep2.png', 'sleep3.png', 'sleep2.png', 'sleep2.png'],
+  }
+}
+
+const catDefaults: Omit<PetType, "asset"> = {
+  canFly: false,
+  speed: 1.5,
+  aspectRatio: { x: 1, y: 0.84 },
+  sprites: {
+    walk: ['walk1.png', 'walk2.png'],
+    run: ['walk1.png', 'walk2.png'],
+    sit: [
+      'talk1.png',
+      'talk2.png',
+      'talk2.png',
+      'talk2.png',
+      'talk2.png',
+      'talk2.png',
+      'talk1.png',
+      'talk1.png',
+      'talk2.png',
+      'talk2.png',
+      'talk2.png',
+      'talk2.png',
+      'talk2.png',
+    ],
+    sleep: ['sit.png', 'sit.png', 'sit.png', 'sit.png', 'sit.png', 'sit.png', 'sit.png', 'sleep1.png', 'sleep2.png', 'sleep2.png', 'sleep2.png', 'sleep2.png', 'sleep2.png', 'sleep2.png', 'sleep2.png', 'sleep2.png', "sleep1.png"],
+  }
+}
 
 export const petTypes: Record<string, PetType> = {
   dog: {
     asset: 'dog',
-    canFly: false,
-    speed: 1,
-    aspectRatio: { x: 1, y: 0.66 },
-    sprites: {
-      walk: ['walk1.png', 'walk2.png'],
-      run: ['walk1.png', 'walk2.png'],
-      sit: ['sit1.png', 'sit2.png'],
-      sleep: ['sleep1.png', 'sleep2.png'],
-    },
+    ...dogDefaults,
   },
   dog_black: {
     asset: 'dog_black',
-    canFly: false,
-    speed: 1,
-    aspectRatio: { x: 1, y: 0.66 },
-    sprites: {
-      walk: ['walk1.png', 'walk2.png'],
-      run: ['run1.png', 'run2.png'],
-      sit: [
-        'sit1.png',
-        'sit2.png',
-        'sit2.png',
-        'sit2.png',
-        'sit2.png',
-        'sit2.png',
-        'sit1.png',
-        'sit1.png',
-        'sit2.png',
-        'sit2.png',
-        'sit2.png',
-        'sit2.png',
-        'sit2.png',
-      ],
-      sleep: ['sleep1.png', 'sleep2.png', 'sleep2.png', 'sleep2.png', 'sleep2.png'],
-    },
+    ...dogDefaults,
+  },
+  dog_beige: {
+    asset: 'dog_beige',
+    ...dogDefaults,
+  },
+  cat: {
+    asset: 'cat',
+    ...catDefaults
+  },
+  cat_grey: {
+    asset: 'cat_grey',
+    ...catDefaults
+  },
+  cat_orange: {
+    asset: 'cat_orange',
+    ...catDefaults
   },
   // chicken: {
   //   asset: 'chicken',
@@ -51,42 +89,6 @@ export const petTypes: Record<string, PetType> = {
   //     sleep: ['sleep.gif'],
   //   }
   // },
-  cat: {
-    asset: 'cat',
-    canFly: false,
-    speed: 1.5,
-    aspectRatio: { x: 1, y: 0.92 },
-    sprites: {
-      walk: ['walk1.gif', 'walk2.gif'],
-      run: ['walk1.gif', 'walk2.gif'],
-      sit: ['sit1.png'],
-      sleep: ['sleep1.png', 'sleep2.png'],
-    },
-  },
-  cat_grey: {
-    asset: 'cat_grey',
-    canFly: false,
-    speed: 1.5,
-    aspectRatio: { x: 1, y: 0.92 },
-    sprites: {
-      walk: ['walk1.png', 'walk2.png'],
-      run: ['walk1.png', 'walk2.png'],
-      sit: ['sit1.png'],
-      sleep: ['sleep1.png', 'sleep2.png'],
-    },
-  },
-  cat_orange: {
-    asset: 'cat_orange',
-    canFly: false,
-    speed: 1.5,
-    aspectRatio: { x: 1, y: 0.92 },
-    sprites: {
-      walk: ['walk1.png', 'walk2.png'],
-      run: ['walk1.png', 'walk2.png'],
-      sit: ['sit1.png'],
-      sleep: ['sleep1.png', 'sleep2.png'],
-    },
-  },
   // bird: {
   //   asset: 'bird',
   //   canFly: true,
