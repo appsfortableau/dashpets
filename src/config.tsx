@@ -32,13 +32,15 @@ document.addEventListener('DOMContentLoaded', () => {
 function forAllSettingsElements(func: (el: HTMLElement, group: string, key: string, defaultValue: any) => void) {
   Object.entries(new PetsSettings).forEach(([group, groupValue]) => {
     Object.entries(groupValue).forEach(([key, defaultValue]) => {
-      const element = document.getElementById(key);
-      if (element === null) {
+      const elements = document.querySelectorAll("#" + key);
+      if (elements === null || elements.length === 0) {
         console.error("Could not find the input element for: " + key + ". Please make sure the id of the input element is the same as the key of the setting.");
         return
       }
 
-      func(element, group, key, defaultValue)
+      elements.forEach(element => {
+        func(element as HTMLElement, group, key, defaultValue)
+      });
     })
   })
 }

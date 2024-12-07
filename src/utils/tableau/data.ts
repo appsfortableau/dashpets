@@ -3,8 +3,8 @@ import { DataTable, Worksheet } from '@tableau/extensions-api-types';
 export function openConfig(): Object {
   window.tableau.extensions.ui
     .displayDialogAsync('./config.html', 'null', {
-      height: 900,
-      width: 450,
+      height: 600,
+      width: 900,
       //@ts-ignore can't seem to import the dailogStyle from the tableau
       dialogStyle: 'modeless',
     })

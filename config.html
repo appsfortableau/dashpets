@@ -5,58 +5,145 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Configure Tooltip Settings</title>
     <style>
+      @font-face {
+        font-family: 'Monocraft';
+        src: url('/assets/fonts/monocraft.otf') format('opentype');
+      }
       body {
-        font-family: Arial, sans-serif;
-        padding: 20px;
+        background: #fff url('/assets/bgbtn.png') center/70%;
+        image-rendering: pixelated;
+        font-family: Monocraft !important;
+        font-weight: bold;
+        color: #DDD;
+        text-shadow: 3px 3px #000A;
+        color: white;
+        padding: 0;
+        margin: 0;
+        overflow: hidden;
+        user-select: none;
+      }
+      h1 {
+        text-align: center;
+      }
+      .settings {
+        padding: 10px;
+        width: 100dvw;
+        background-color: rgba(0,0,0,0.4);
+        overflow: scroll;
+        padding: 10px;
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        grid-template-rows: repeat(6, 50px);
+        gap: 30px;
       }
       label {
-        font-size: 16px;
+        font-size: 18px;
+        text-align: center;
+        display: flex;
+        justify-items: end;
+        flex-direction: row;
+        justify-content: center;
+        align-items: center;
+        flex-grow: 1;
+
+        height: 50px;
+        background: #999 url('/assets/bgbtn.png') center / cover;
+	image-rendering: pixelated;
+	border: 2px solid #000;
+        box-shadow: 0.4rem 0.4rem 0 black;
+        border: 0.1rem solid black;
+        cursor: pointer;
+        overflow: hidden;
+        white-space: nowrap;
+        user-select: none;
+        color: #DDD;
+        text-shadow: 2px 2px #000A;
+        box-shadow: inset -2px -4px #0006, inset 2px 2px #FFF7;
+      }
+      label:active {
+        box-shadow: inset -2px -4px #0004, inset 2px 2px #FFF5;
+      }
+      label:hover {
+        background-color: rgba(100, 100, 255, .45) !important;
+        text-shadow: 2px 2px #202013CC;
+        color: #FFFFA0;
       }
       button {
-        margin-top: 10px;
-        padding: 10px 15px;
-        background-color: #007ad0;
-        color: white;
-        border: none;
-        border-radius: 5px;
+        font-family: Monocraft;
+        font-size: 18px;
+        text-align: center;
+
+        height: 50px;
+        background: #999 url('/assets/bgbtn.png') center / cover;
+        image-rendering: pixelated;
+        border: 2px solid #000;
+        box-shadow: 0.4rem 0.4rem 0 black;
+        border: 0.1rem solid black;
         cursor: pointer;
+        overflow: hidden;
+        white-space: nowrap;
+        user-select: none;
+        color: #DDD;
+        text-shadow: 2px 2px #000A;
+        box-shadow: inset -2px -4px #0006, inset 2px 2px #FFF7;
       }
       button:disabled {
         background-color: #cfcfcf;
       }
-      input[type='color'] {
-        display: block;
-        margin-top: 5px;
-        padding: 5px;
-        width: 100%;
+      input[type='checkbox'] {
+        display: none;
+      }
+      input[type='checkbox']:checked + .status:after { 
+        content: ": OFF";
+      }
+      input[type='checkbox']:not(:checked) + .status:after { 
+        content: ": ON";
+      }
+      label > input {
+        background-color: rgba(0,0,0,0.4);
+        margin: 0 10px;
+        width: 3em;
+        color: white;
+        text-align:center;
+        font-family: Monocraft;
+        font-size: 18px;
+      }
+      /* Chrome, Safari, Edge, Opera */
+      input::-webkit-outer-spin-button,
+      input::-webkit-inner-spin-button {
+        -webkit-appearance: none;
+        margin: 0;
+      }
+      /* Firefox */
+      input[type=number] {
+        -moz-appearance: textfield;
+      }
+      .footer {
+        grid-row-end: -1;
+        grid-column-end: span 2;
+        display: grid;
+        width: 75%;
+        justify-self: center;
       }
     </style>
   </head>
   <body>
-    <h2>Colors</h2>
-    <label for="backgroundColor">Background Color:</label>
-    <input type="color" id="backgroundColor" value="#ffffff" />
-    <h2>Tooltip Settings</h2>
-    <label> <input type="checkbox" id="enableTooltips" /> Enable Tooltips </label>
-    <br />
-    <h2>Enable Y Axis</h2>
-    <label> <input type="checkbox" id="enableYAxis" /> Enable Y axis for pets</label>
-    <br />
-    <h2>Pet Size</h2>
-    <label> <input type="number" id="petSizePixels" /> The size of a pet (In pixels) </label>
-    <br />
-    <h2>Random Size</h2>
-    <label> <input type="checkbox" id="enableRandomSize" /> Enable random size. (Overwrites the size measure)</label>
-    <br />
-    <h2>Dynamic Size Settings</h2>
-    <label> <input type="number" id="minSizePercent" /> Minimum pet scalar. (In percent) </label>
-    <br />
-    <label> <input type="number" id="maxSizePercent" /> Maximum pet scalar. (In percent) </label>
-    <br />
-
-    <br />
-    <button id="saveButton">Save</button>
-    <button id="cancelButton">Cancel</button>
+    <h1> Settings </h1>
+    <div class="settings">
+      <label>Enable Tooltips<input type="checkbox" id="enableTooltips" /><p class="status"></p></label>
+      <label>Enable Y axis for pets<input type="checkbox" id="enableYAxis" /><p class="status"></p></label>
+      <label>Enable random size<input type="checkbox" id="enableRandomSize" /><p class="status"></p></label>
+      <label>Pet size<input type="number" id="petSizePixels" />px</label>
+      <label>Minimum pet scalar<input type="number" id="minSizePercent" />%</label>
+      <label>Maximum pet scalar<input type="number" min="1" max="500" value="100" id="maxSizePercent" />%</label>
+      <label for="backgroundColor">
+        Background Color:
+        <input type="color" id="backgroundColor" value="#ffffff" />
+      </label>
+      <div class="footer">
+        <button id="saveButton">Save & Close</button>
+      </div>
+    </div>
     <script type="module" src="/src/config.tsx"></script>
   </body>
 </html>

@@ -37,7 +37,7 @@ tableau.extensions.initializeAsync({ configure: openConfig }).then(() => {
       ctx.fillStyle = color; // Set the fill style to the background color
       ctx.fillRect(0, 0, canvas.width, canvas.height); // Fill the entire canvas
     }
-    
+
     // Apply the background color from settings
     setCanvasBackground(backgroundColor);
     // just for fun for now, lets change it to a measure of Tableau
