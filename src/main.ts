@@ -16,6 +16,7 @@ tableau.extensions.initializeAsync({ configure: openConfig }).then(() => {
   }
 
 
+  const clearSelectionButton = document.getElementById("clearSelection")! as HTMLButtonElement;
   const canvas = document.getElementById('gameCanvas')! as HTMLCanvasElement;
   // NOTE: Could this be null?
   const ctx = canvas.getContext('2d')!;
@@ -52,6 +53,26 @@ tableau.extensions.initializeAsync({ configure: openConfig }).then(() => {
     const data = await getSummaryDataTable(worksheet)!;
     const selected: string[] = [];
     const pets: Pet[] = [];
+
+    function clearSelection() {
+      pets.map(element => {
+        if (element.selected) {
+          element.selected = false;
+          const selectedIndex = selected.findIndex((val) => val === element.name);
+          if (selectedIndex !== -1) {
+            selected.splice(
+              selectedIndex,
+              1
+            );
+            worksheet.selectMarksByValueAsync(
+              [{ fieldName: fields["dimension"][0], value: selected }],
+              window.tableau.SelectionUpdateType.Replace
+            );
+          }
+        }
+      })
+    }
+    clearSelectionButton.addEventListener("click", clearSelection)
 
     function loadImage(src: string, petType: PetType): HTMLImageElement {
       const img = new Image();
@@ -352,6 +373,10 @@ tableau.extensions.initializeAsync({ configure: openConfig }).then(() => {
       drawTooltip(pet);
     }
 
+    function setClearSelectionButtonVisibility(state: "hidden" | "visible") {
+      clearSelectionButton.style.display = state === "hidden" ? "none" : "block"
+    }
+
     function gameLoop() {
       ctx.clearRect(0, 0, canvas.width, canvas.height);
       setCanvasBackground(backgroundColor)
@@ -364,6 +389,13 @@ tableau.extensions.initializeAsync({ configure: openConfig }).then(() => {
         const pet = pets[i];
         updatePet(pet, deltaTime);
         drawPet(pet);
+      }
+
+      console.log(selected.length)
+      if (selected.length === 0) {
+        setClearSelectionButtonVisibility("hidden")
+      } else {
+        setClearSelectionButtonVisibility("visible")
       }
 
       requestAnimationFrame(gameLoop);

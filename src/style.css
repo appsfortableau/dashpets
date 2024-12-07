@@ -15,3 +15,31 @@ body {
 
 canvas {
 }
+
+button {
+  font-family: Monocraft;
+  font-size: 18px;
+  text-align: center;
+
+  height: 50px;
+  background: #999 url('/assets/bgbtn.png') center / cover;
+  image-rendering: pixelated;
+  border: 2px solid #000;
+  box-shadow: 0.4rem 0.4rem 0 black;
+  border: 0.1rem solid black;
+  cursor: pointer;
+  overflow: hidden;
+  white-space: nowrap;
+  user-select: none;
+  color: #DDD;
+  text-shadow: 2px 2px #000A;
+  box-shadow: inset -2px -4px #0006, inset 2px 2px #FFF7;
+}
+
+#clearSelection {
+  position: absolute;
+  right: 0;
+  top: 0;
+  margin: 10px;
+  display: none;
+}
