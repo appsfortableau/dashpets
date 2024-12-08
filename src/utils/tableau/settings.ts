@@ -27,23 +27,29 @@ function parseTableauSettingsObject(settings: Record<string, string>): Partial<P
 }
 
 function ensureFullPetSettings(potentialSettings: Partial<PetsSettings> | undefined): PetsSettings {
+  const defaultSettings = new PetsSettings();
   if (typeof potentialSettings !== "object") {
-    return new PetsSettings();
+    return defaultSettings;
   }
 
-  const combinedPetSettings = {
-    ...new PetsSettings(),
-    ...potentialSettings
-  };
+  Object.entries(defaultSettings).forEach(([key, value]) => {
+    console.log(potentialSettings[key as keyof PetsSettings], value, {
+      ...value,
+      ...potentialSettings[key as keyof PetsSettings]
+    })
+    potentialSettings[key as keyof PetsSettings] = {
+      ...value,
+      ...potentialSettings[key as keyof PetsSettings]
+    }
+  })
 
-  // TODO: Ensure all the subsettings are also set correctly with objects
-
-  return combinedPetSettings;
+  return potentialSettings as PetsSettings;
 }
 
 export function storeSettingsInTableau(settings: RecursivePartial<PetsSettings>): Promise<Record<string, string>> {
   const defaultSettings = new PetsSettings();
 
+  console.log("before storing settings:", settings);
   const settingsToStore = onlyKeepChangedSettings(settings, defaultSettings)
 
   console.log("storing settings:", settingsToStore);
@@ -69,6 +75,8 @@ function onlyKeepChangedSettings<T>(settings: any, defaultSettings: T): (T | Par
         changedKeys[key] = newSetting
       }
     })
+
+    console.log(settings, defaultSettings, changedKeys)
 
     return changedKeys as Partial<T>
   }

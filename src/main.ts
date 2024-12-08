@@ -34,6 +34,7 @@ tableau.extensions.initializeAsync({ configure: openConfig }).then(() => {
     // set to true to use the Y axis as well
     const useYcoords = settings.displaySettings.enableYAxis;
     const backgroundColor = settings.displaySettings.backgroundColor
+    console.log('background', backgroundColor)
     function setCanvasBackground(color: string) {
       ctx.fillStyle = color; // Set the fill style to the background color
       ctx.fillRect(0, 0, canvas.width, canvas.height); // Fill the entire canvas
@@ -391,7 +392,6 @@ tableau.extensions.initializeAsync({ configure: openConfig }).then(() => {
         drawPet(pet);
       }
 
-      console.log(selected.length)
       if (selected.length === 0) {
         setClearSelectionButtonVisibility("hidden")
       } else {
