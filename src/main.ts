@@ -8,6 +8,7 @@ import { debounce, immediateThenDebounce } from '@/utils/debounce.js';
 import { getStoredTableauSettings } from '@/utils/tableau/settings';
 import { lerp } from '@/utils/lerp';
 import { petTypes } from '@/petTypes';
+import { Ball, BallConstants } from './types/ball';
 
 tableau.extensions.initializeAsync({ configure: openConfig }).then(() => {
   const worksheet = tableau.extensions.worksheetContent?.worksheet!;
@@ -15,11 +16,16 @@ tableau.extensions.initializeAsync({ configure: openConfig }).then(() => {
     return; // no worksheet
   }
 
-
   const clearSelectionButton = document.getElementById("clearSelection")! as HTMLButtonElement;
   const canvas = document.getElementById('gameCanvas')! as HTMLCanvasElement;
   // NOTE: Could this be null?
   const ctx = canvas.getContext('2d')!;
+
+  const ballConst: BallConstants = {
+    damping: 0.8,
+    gravity: 2.981,
+    friction: 0.7,
+  } as const
 
   canvas.width = window.innerWidth;
   canvas.height = window.innerHeight;
@@ -53,6 +59,7 @@ tableau.extensions.initializeAsync({ configure: openConfig }).then(() => {
     const data = await getSummaryDataTable(worksheet)!;
     const selected: string[] = [];
     const pets: Pet[] = [];
+    let ball: Ball | undefined
 
     function clearSelection() {
       pets.map(element => {
@@ -183,6 +190,14 @@ tableau.extensions.initializeAsync({ configure: openConfig }).then(() => {
         return { x: Math.random() * canvas.width, y: Math.random() * canvas.height };
       } else {
         return { x: Math.random() * canvas.width, y: canvas.height };
+      }
+    }
+
+    function createBall(position: Vec2, velocity: Vec2 = { x: 0, y: 0 }): Ball {
+      return {
+        position,
+        velocity,
+        frozen: true
       }
     }
 
@@ -328,6 +343,48 @@ tableau.extensions.initializeAsync({ configure: openConfig }).then(() => {
       }
     }
 
+    function updateBall(ball: Ball, deltaTime: number) {
+      if (ball.frozen) {
+        return
+      }
+
+      ball.velocity.y = Math.floor(Math.min(ball.velocity.y, 50) * 10) / 10
+      ball.velocity.x = Math.floor(Math.min(ball.velocity.x, 50) * 10) / 10
+
+      const timeMul = deltaTime / 50
+      const ballRad = settings.ballSettings.ballSize / 2
+
+      if (ball.position.x + ballRad < 0) {
+        ball.velocity.x = -ball.velocity.x * ballConst.damping
+        ball.position.x = Math.abs(ball.position.x)
+      } else if (ball.position.x + ballRad >= canvas.width) {
+        ball.velocity.x = Math.round(-ball.velocity.x * ballConst.damping)
+        ball.position.x = canvas.width - ((ball.position.x + ballRad) % canvas.width) - ballRad
+      }
+
+      if (ball.position.y + ballRad < 0) {
+        ball.velocity.y = -ball.velocity.y * ballConst.damping
+        ball.position.y = ballRad
+      } else if (ball.position.y + ballRad >= canvas.height) {
+        if (Math.abs(ball.velocity.x) + Math.abs(ball.velocity.y) < 2) {
+          ball.frozen = true
+        }
+        ball.velocity.y = -ball.velocity.y * ballConst.damping
+        ball.velocity.x *= ballConst.friction
+        // This is the canvas height because the cords start at the top left of the canvas (0, 0)
+        ball.position.y = canvas.height - ballRad
+      }
+
+      if (!useYcoords) {
+        ball.velocity.y += ballConst.gravity * timeMul
+      }
+
+      ball.position.x += ball.velocity.x * timeMul
+      ball.position.y += ball.velocity.y * timeMul
+
+
+    }
+
     function drawTooltip(pet: Pet) {
       if (pet.tooltip) {
         ctx.font = '10px Monocraft';
@@ -373,6 +430,13 @@ tableau.extensions.initializeAsync({ configure: openConfig }).then(() => {
       drawTooltip(pet);
     }
 
+    function drawBall(ball: Ball) {
+      ctx.beginPath();
+      ctx.arc(ball.position.x, ball.position.y, settings.ballSettings.ballSize / 2, 0, 2 * Math.PI, false);
+      ctx.fillStyle = '#ff0079';
+      ctx.fill();
+    }
+
     function setClearSelectionButtonVisibility(state: "hidden" | "visible") {
       clearSelectionButton.style.display = state === "hidden" ? "none" : "block"
     }
@@ -384,11 +448,17 @@ tableau.extensions.initializeAsync({ configure: openConfig }).then(() => {
       const deltaTime = currentTime - lastUpdateTime;
       lastUpdateTime = currentTime;
 
+
       // Draw from back to front to make sure the hover is for the animal at the highest z-index
       for (let i = pets.length - 1; i >= 0; i--) {
         const pet = pets[i];
         updatePet(pet, deltaTime);
         drawPet(pet);
+      }
+
+      if (ball) {
+        updateBall(ball, deltaTime)
+        drawBall(ball)
       }
 
       if (selected.length === 0) {
@@ -439,13 +509,19 @@ tableau.extensions.initializeAsync({ configure: openConfig }).then(() => {
     });
 
     canvas.addEventListener('mousedown', (e) => {
+      e.preventDefault()
       const rect = canvas.getBoundingClientRect();
-      const clickX = e.clientX - rect.left;
-      const clickY = e.clientY - rect.top;
+      const click: Vec2 = {
+        x: e.clientX - rect.left,
+        y: e.clientY - rect.top
+      }
+      if (settings.ballSettings.enableBall) {
+        throwBall(click, e.timeStamp)
+      }
 
       pets.forEach((pet) => {
         // Check if the click is within the pet's bounding box
-        if (clickX >= pet.position.x && clickX <= pet.position.x + pet.dimensions.x && clickY >= pet.position.y && clickY <= pet.position.y + pet.dimensions.y) {
+        if (click.x >= pet.position.x && click.x <= pet.position.x + pet.dimensions.x && click.y >= pet.position.y && click.y <= pet.position.y + pet.dimensions.y) {
           pet.selected = !pet.selected; // Toggle selection
           if (pet.selected) {
             selected.push(pet.name);
@@ -467,6 +543,51 @@ tableau.extensions.initializeAsync({ configure: openConfig }).then(() => {
         }
       });
     });
+
+    function throwBall(startPos: Vec2, startTime: number) {
+      const lastPos = new Array(5) as Vec2[]
+      let posIndex = 0
+      canvas.onmouseup = (e) => {
+        e.preventDefault()
+        canvas.onmouseup = null
+        canvas.onmousemove = null
+        if (!ball) {
+          return
+        }
+        const deltaTime = e.timeStamp - startTime
+        const rect = canvas.getBoundingClientRect();
+        const mousePosition: Vec2 = {
+          x: e.clientX - rect.left,
+          y: e.clientY - rect.top
+        }
+
+        const velocity: Vec2 = {
+          x: (mousePosition.x - startPos.x),
+          y: (mousePosition.y - startPos.y)
+        }
+
+        ball = createBall(mousePosition, velocity)
+        ball.frozen = false
+      }
+
+      canvas.onmousemove = (e) => {
+        const rect = canvas.getBoundingClientRect();
+        const mousePosition: Vec2 = {
+          x: e.clientX - rect.left,
+          y: e.clientY - rect.top
+        }
+        const deltaTime = e.timeStamp - startTime
+        if (ball) {
+          ball.position = mousePosition
+          if (deltaTime > 100) {
+            startPos = mousePosition
+            startTime = e.timeStamp
+          }
+        } else if (deltaTime > 200) {
+          ball = createBall(mousePosition)
+        }
+      }
+    }
 
     gameLoop();
   }
