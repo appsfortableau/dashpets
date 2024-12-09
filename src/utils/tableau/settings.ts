@@ -33,10 +33,6 @@ function ensureFullPetSettings(potentialSettings: Partial<PetsSettings> | undefi
   }
 
   Object.entries(defaultSettings).forEach(([key, value]) => {
-    console.log(potentialSettings[key as keyof PetsSettings], value, {
-      ...value,
-      ...potentialSettings[key as keyof PetsSettings]
-    })
     potentialSettings[key as keyof PetsSettings] = {
       ...value,
       ...potentialSettings[key as keyof PetsSettings]
@@ -48,11 +44,7 @@ function ensureFullPetSettings(potentialSettings: Partial<PetsSettings> | undefi
 
 export function storeSettingsInTableau(settings: RecursivePartial<PetsSettings>): Promise<Record<string, string>> {
   const defaultSettings = new PetsSettings();
-
-  console.log("before storing settings:", settings);
   const settingsToStore = onlyKeepChangedSettings(settings, defaultSettings)
-
-  console.log("storing settings:", settingsToStore);
 
   tableau.extensions.settings.set('settings', JSON.stringify(settingsToStore));
 
@@ -60,7 +52,6 @@ export function storeSettingsInTableau(settings: RecursivePartial<PetsSettings>)
 }
 
 function onlyKeepChangedSettings<T>(settings: any, defaultSettings: T): (T | Partial<T> | null) {
-  console.log("checking:", settings, defaultSettings)
   if (typeof settings !== typeof defaultSettings) {
     return null
   }
@@ -75,8 +66,6 @@ function onlyKeepChangedSettings<T>(settings: any, defaultSettings: T): (T | Par
         changedKeys[key] = newSetting
       }
     })
-
-    console.log(settings, defaultSettings, changedKeys)
 
     return changedKeys as Partial<T>
   }

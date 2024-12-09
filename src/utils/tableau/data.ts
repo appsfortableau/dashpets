@@ -52,7 +52,5 @@ export async function getSummaryDataTable(worksheet: Worksheet): Promise<(null |
   }
   await dataTableReader.releaseAsync();
 
-  console.log(rows)
-
   return rows;
 }
