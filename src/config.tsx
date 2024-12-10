@@ -20,11 +20,6 @@ document.addEventListener('DOMContentLoaded', () => {
         tableau.extensions.ui.closeDialog('Settings Saved');
       });
     });
-
-    // Cancel button functionality
-    cancelButton.addEventListener('click', () => {
-      tableau.extensions.ui.closeDialog('Canceled');
-    });
   });
 });
 
