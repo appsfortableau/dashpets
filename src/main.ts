@@ -691,6 +691,8 @@ tableau.extensions.initializeAsync({ configure: openConfig }).then(() => {
         })
 
         worksheet.selectMarksByValueAsync(marks, window.tableau.SelectionUpdateType.Replace);
+      } else {
+        clearSelection()
       }
     });
 
