@@ -171,7 +171,7 @@ tableau.extensions.initializeAsync({ configure: openConfig }).then(() => {
       const name = getNameFromDataPoint(dataPoint);
       const targetValue = getNumberFromDataPoint(dataPoint, targetMeasure) ?? 0
       const dimensionValue = getNumberFromDataPoint(dataPoint, sizeMeasure) ?? 0
-      const startValue = Math.min(targetValue - 1, settings.dataPointStore.measureStartValue[name])
+      const startValue = settings.dataPointStore.measureStartValue[name] ?? 0
       const completionPercentage = unlerp(startValue ?? 0, targetValue, dimensionValue)
       const eggCompletion = clamp(completionPercentage ?? 1, 0, 1);
       const isEgg = eggCompletion < 1;
@@ -269,6 +269,7 @@ tableau.extensions.initializeAsync({ configure: openConfig }).then(() => {
 
     // If authoring update starting values of target calculation
     if (isAuthoring) {
+      settings.dataPointStore.measureStartValue = {}
       petsData.forEach(point => {
         const sizeMeasureValue = getNumberFromDataPoint(point, sizeMeasure)
         if (sizeMeasureValue) {
@@ -397,44 +398,58 @@ tableau.extensions.initializeAsync({ configure: openConfig }).then(() => {
 
     function updateBall(ball: Ball, deltaTime: number) {
       if (ball.frozen) {
-        return
+        return;
       }
 
-      ball.velocity.y = Math.floor(Math.min(ball.velocity.y, 50) * 10) / 10
-      ball.velocity.x = Math.floor(Math.min(ball.velocity.x, 50) * 10) / 10
+      ball.velocity.y = Math.floor(Math.min(ball.velocity.y, 50) * 10) / 10;
+      ball.velocity.x = Math.floor(Math.min(ball.velocity.x, 50) * 10) / 10;
 
-      const timeMul = deltaTime / 50
-      const ballRad = settings.ballSettings.ballSize / 2
+      const timeMul = deltaTime / 50;
+      const ballRad = settings.ballSettings.ballSize / 2;
 
-      if (ball.position.x + ballRad < 0) {
-        ball.velocity.x = -ball.velocity.x * ballConst.damping
-        ball.position.x = Math.abs(ball.position.x)
+      // Handle wall collisions (X-axis)
+      if (ball.position.x - ballRad < 0) {
+        ball.velocity.x = -ball.velocity.x * ballConst.damping;
+        ball.position.x = ballRad;
       } else if (ball.position.x + ballRad >= canvas.width) {
-        ball.velocity.x = Math.round(-ball.velocity.x * ballConst.damping)
-        ball.position.x = canvas.width - ((ball.position.x + ballRad) % canvas.width) - ballRad
+        ball.velocity.x = -ball.velocity.x * ballConst.damping;
+        ball.position.x = canvas.width - ballRad;
       }
 
-      if (ball.position.y + ballRad < 0) {
-        ball.velocity.y = -ball.velocity.y * ballConst.damping
-        ball.position.y = ballRad
+      // Handle floor and ceiling collisions (Y-axis)
+      if (ball.position.y - ballRad < 0) {
+        ball.velocity.y = -ball.velocity.y * ballConst.damping;
+        ball.position.y = ballRad;
       } else if (ball.position.y + ballRad >= canvas.height) {
-        if (Math.abs(ball.velocity.x) + Math.abs(ball.velocity.y) < 2) {
-          ball.frozen = true
+        ball.velocity.y = -ball.velocity.y * ballConst.damping;
+        ball.velocity.x *= ballConst.friction; // Apply friction when touching the ground
+        ball.position.y = canvas.height - ballRad;
+
+        // Damp the Y-velocity further to prevent infinite bounces
+        if (Math.abs(ball.velocity.y) < 0.5) {
+          ball.velocity.y = 0;
         }
-        ball.velocity.y = -ball.velocity.y * ballConst.damping
-        ball.velocity.x *= ballConst.friction
-        // This is the canvas height because the cords start at the top left of the canvas (0, 0)
-        ball.position.y = canvas.height - ballRad
       }
 
+      // Stop the ball when velocity is very low
+      if (Math.sqrt(ball.velocity.x ** 2 + ball.velocity.y ** 2) < (useYcoords ? 2 : 4)) {
+        ball.frozen = true;
+        ball.velocity.x = 0;
+        ball.velocity.y = 0;
+        return;
+      }
+
+      // Apply gravity or friction based on `useYcoords`
       if (!useYcoords) {
-        ball.velocity.y += ballConst.gravity * timeMul
+        ball.velocity.y += ballConst.gravity * timeMul;
+      } else {
+        ball.velocity.y *= 0.99; // Gradual damping for Y
+        ball.velocity.x *= 0.99; // Gradual damping for X
       }
 
-      ball.position.x += ball.velocity.x * timeMul
-      ball.position.y += ball.velocity.y * timeMul
-
-
+      // Update ball position
+      ball.position.x += ball.velocity.x * timeMul;
+      ball.position.y += ball.velocity.y * timeMul;
     }
 
     function drawTooltip(pet: Pet) {
@@ -597,8 +612,9 @@ tableau.extensions.initializeAsync({ configure: openConfig }).then(() => {
     });
 
     function throwBall(startPos: Vec2, startTime: number) {
-      const lastPos = new Array(5) as Vec2[]
-      let posIndex = 0
+      if (ball) {
+        ball.frozen = true
+      }
       canvas.onmouseup = (e) => {
         e.preventDefault()
         canvas.onmouseup = null
@@ -606,7 +622,6 @@ tableau.extensions.initializeAsync({ configure: openConfig }).then(() => {
         if (!ball) {
           return
         }
-        const deltaTime = e.timeStamp - startTime
         const rect = canvas.getBoundingClientRect();
         const mousePosition: Vec2 = {
           x: e.clientX - rect.left,
