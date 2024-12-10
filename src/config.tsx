@@ -5,7 +5,6 @@ import { PetsSettings } from './settings';
 
 document.addEventListener('DOMContentLoaded', () => {
   const saveButton = document.getElementById('saveButton') as HTMLButtonElement;
-  const cancelButton = document.getElementById('cancelButton') as HTMLButtonElement;
   let tableau = window.tableau;
   // Initialize Tableau Extensions
   tableau.extensions.initializeDialogAsync().then(() => {

@@ -11,6 +11,7 @@ import { lerp, unlerp } from '@/utils/lerp';
 import { Egg, petTypes } from '@/petTypes';
 import { clamp, isNumber } from '@/utils/primitives';
 import { removeAgg } from './utils/tableau/fieldName';
+import { DataTable } from '@tableau/extensions-api-types';
 
 tableau.extensions.initializeAsync({ configure: openConfig }).then(() => {
   const imageMap: Record<string, HTMLImageElement> = {}
@@ -57,35 +58,253 @@ tableau.extensions.initializeAsync({ configure: openConfig }).then(() => {
 
   worksheet.addEventListener(tableau.TableauEventType.SummaryDataChanged, updateDataAndRender);
   tableau.extensions.settings.addEventListener(tableau.TableauEventType.SettingsChanged, updateDataAndRender);
+  window.addEventListener("resize", () => {
+    canvas.height = window.innerHeight
+    canvas.width = window.innerWidth
+    updateDataAndRender();
+  })
 
+  clearSelectionButton.addEventListener("click", clearSelection)
+  function clearSelection() {
+    pets.filter(element => element.selected).forEach(element => {
+      element.selected = false;
+      worksheet.clearSelectedMarksAsync();
+    })
+  }
+
+  function getPetTypeFromHash(name: string): PetType {
+    const hashCode = name.hashCode();
+
+    const petTypesArr = Object.values(petTypes)
+    const petIndex = Math.abs(hashCode) % petTypesArr.length
+
+    return petTypesArr[petIndex]
+  }
+
+
+  function getTooltipMessage(pet: Pet): string {
+    let message = ""
+    if (pet.eggCompletion < 1) {
+      if (Math.random() > 0.5) {
+        message = `I am ${Math.round(pet.eggCompletion * 100)}% hatched`
+      } else {
+        const targetValue = getFormattedFromDataPoint(pet.dataPoint, targetMeasure) ?? ""
+        if (targetValue && removeAgg(sizeMeasure)) {
+          message = `My ${removeAgg(sizeMeasure)} target is ${targetValue}`
+        }
+      }
+    } else {
+      if (Math.random() > 0.5) {
+        const dimension = sizeMeasure
+        const value = getFormattedFromDataPoint(pet.dataPoint, sizeMeasure)
+        if (value) {
+          message = `My ${removeAgg(dimension)} is ${value}`
+        }
+      }
+      if (!message) {
+        message = messages[Math.floor(Math.random() * messages.length)];
+      }
+    }
+    return message
+  }
+
+  function getFormattedFromDataPoint(dataPoint: DataPoint, key: string): string | null {
+    if (!key) {
+      return null;
+    }
+
+    let targetValue = dataPoint?.[key].formattedValue ?? null
+
+    return targetValue
+  }
+
+
+  function getInitialPetPosition(): Vec2 {
+    if (useYcoords) {
+      return { x: Math.random() * canvas.width, y: Math.random() * canvas.height };
+    } else {
+      return { x: Math.random() * canvas.width, y: canvas.height };
+    }
+  }
+
+  function createBall(position: Vec2, velocity: Vec2 = { x: 0, y: 0 }): Ball {
+    return {
+      position,
+      velocity,
+      frozen: true
+    }
+  }
+
+
+  let lastUpdateTime = Date.now();
+  canvas.addEventListener('mousemove',
+    immediateThenDebounce((e) => {
+      const rect = canvas.getBoundingClientRect();
+      const mouseX = e.clientX - rect.left;
+      const mouseY = e.clientY - rect.top;
+      const didDrawTooltip = pets.some((pet, index) => {
+        let tooltipAlreadyActive = !!pet.hover;
+        pet.hover = mouseX >= pet.position.x && mouseX <= pet.position.x + pet.dimensions.x && mouseY >= pet.position.y && mouseY <= pet.position.y + pet.dimensions.y;
+
+        if (pet.hover) {
+          canvas.style.cursor = 'pointer';
+          if (!tooltipAlreadyActive) {
+            const myHoveredTuple = index + 1;
+            window?.tableau?.extensions?.worksheetContent?.worksheet.hoverTupleAsync(myHoveredTuple, {
+              tooltipAnchorPoint: { x: mouseX, y: mouseY + 100 },
+            });
+          }
+
+          return true;
+        }
+      });
+
+      if (!didDrawTooltip) {
+        // If we get here the cursor is not on a pet so we can remove the tooltip
+        canvas.style.cursor = 'default';
+        window?.tableau?.extensions?.worksheetContent?.worksheet.hoverTupleAsync(99999999999, {
+          tooltipAnchorPoint: { x: mouseX, y: mouseY + 100 },
+        });
+      }
+    }, 25)
+  );
+
+  canvas.addEventListener('mouseleave', () => {
+    pets.forEach((pet) => (pet.hover = false));
+  });
+
+  canvas.addEventListener('mousedown', (e) => {
+    e.preventDefault()
+    const rect = canvas.getBoundingClientRect();
+    const click: Vec2 = {
+      x: e.clientX - rect.left,
+      y: e.clientY - rect.top
+    }
+    if (enableBall) {
+      throwBall(click, e.timeStamp)
+    }
+
+    pets.map((pet) => {
+      // Check if the click is within the pet's bounding box
+      if (click.x >= pet.position.x && click.x <= pet.position.x + pet.dimensions.x && click.y >= pet.position.y && click.y <= pet.position.y + pet.dimensions.y) {
+        pet.selected = !pet.selected; // Toggle selection
+      }
+      return pet
+    });
+
+    const marksToSelect: Record<string, Set<any>> = {}
+    pets.filter(s => s.selected).forEach(({ dataPoint }) => {
+      Object.entries(dataPoint).forEach(([k, v]) => {
+        if (k === sizeMeasure || k === targetMeasure) {
+          return
+        }
+
+        if (!marksToSelect[k]) {
+          marksToSelect[k] = new Set()
+        }
+
+        marksToSelect[k].add(v.value)
+      })
+    })
+
+    if (Object.keys(marksToSelect).length > 0) {
+      const marks = Object.entries(marksToSelect).map(([k, v]) => {
+        return { fieldName: k, value: Array.from(v) }
+      })
+
+      worksheet.selectMarksByValueAsync(marks, window.tableau.SelectionUpdateType.Replace);
+    } else {
+      clearSelection()
+    }
+  });
+
+  function throwBall(startPos: Vec2, startTime: number) {
+    if (ball) {
+      ball.frozen = true
+    }
+    canvas.onmouseup = (e) => {
+      e.preventDefault()
+      canvas.onmouseup = null
+      canvas.onmousemove = null
+      if (!ball) {
+        return
+      }
+      const rect = canvas.getBoundingClientRect();
+      const mousePosition: Vec2 = {
+        x: e.clientX - rect.left,
+        y: e.clientY - rect.top
+      }
+
+      const velocity: Vec2 = {
+        x: (mousePosition.x - startPos.x),
+        y: (mousePosition.y - startPos.y)
+      }
+
+      ball = createBall(mousePosition, velocity)
+      ball.frozen = false
+
+      pets.forEach(pet => {
+        if (pet.state !== 'run') {
+          pet.chaseBall = true
+          pet.state = 'run'
+        }
+      })
+    }
+
+    canvas.onmousemove = (e) => {
+      const rect = canvas.getBoundingClientRect();
+      const mousePosition: Vec2 = {
+        x: e.clientX - rect.left,
+        y: e.clientY - rect.top
+      }
+      const deltaTime = e.timeStamp - startTime
+      if (ball) {
+        ball.position = mousePosition
+        if (deltaTime > 100) {
+          startPos = mousePosition
+          startTime = e.timeStamp
+        }
+      } else if (deltaTime > 200) {
+        ball = createBall(mousePosition)
+      }
+    }
+  }
+  let useYcoords: boolean
+  let backgroundColor: string
+  let useRandomSize: boolean
+  let enableBall: boolean
+  let petSize: number
+  let fields: Record<string, string[]>
+  let data: DataTable | null
+  let pets: Pet[]
+  let ball: Ball | null
+  let sizeMeasure: string
+  let targetMeasure: string
+
+  function setCanvasBackground(color: string) {
+    ctx.fillStyle = color; // Set the fill style to the background color
+    ctx.fillRect(0, 0, canvas.width, canvas.height); // Fill the entire canvas
+  }
   async function _updateDataAndRender() {
     if (ignoreUpdate) {
       ignoreUpdate = false
       return
     }
+
     const settings = getStoredTableauSettings()
-    // set to true to use the Y axis as well
-    const useYcoords = settings.displaySettings.enableYAxis;
-    const backgroundColor = settings.displaySettings.backgroundColor
-    function setCanvasBackground(color: string) {
-      ctx.fillStyle = color; // Set the fill style to the background color
-      ctx.fillRect(0, 0, canvas.width, canvas.height); // Fill the entire canvas
-    }
-
-    // Apply the background color from settings
+    useYcoords = settings.displaySettings.enableYAxis;
+    backgroundColor = settings.displaySettings.backgroundColor;
     setCanvasBackground(backgroundColor);
-    // just for fun for now, lets change it to a measure of Tableau
-    const useRandomSize = settings.dynamicSizeSettings.enableRandomSize;
-    const petSize = settings.displaySettings.petSizePixels
+    useRandomSize = settings.dynamicSizeSettings.enableRandomSize;
+    petSize = settings.displaySettings.petSizePixels
+    enableBall = settings.ballSettings.enableBall
 
-    const fields = await getEncodings(worksheet);
-    // NOTE: Is it possible for the size measure to have a limit to 1 column in the trex?
-    const sizeMeasure = fields?.["size"]?.[0] ?? ""
-    const targetMeasure = fields?.["target"]?.[0] ?? ""
+    fields = await getEncodings(worksheet);
+    sizeMeasure = fields?.["size"]?.[0] ?? ""
+    targetMeasure = fields?.["target"]?.[0] ?? ""
 
     // TODO: What if data is null?
-    const data = await getSummaryDataTable(worksheet)!;
-
+    data = await getSummaryDataTable(worksheet)!;
 
     if (data && data.totalRowCount > 0) {
       startScreen.style.display = 'none';
@@ -95,33 +314,7 @@ tableau.extensions.initializeAsync({ configure: openConfig }).then(() => {
       canvas.style.display = 'none';
     }
 
-    const pets: Pet[] = [];
-    let ball: Ball | undefined
-
-    function clearSelection() {
-      pets.filter(element => element.selected).forEach(element => {
-        element.selected = false;
-        worksheet.clearSelectedMarksAsync();
-      })
-    }
-    clearSelectionButton.addEventListener("click", clearSelection)
-
-
-    // Helper function to randomly select a pet type
-    // function getRandomPetType(): PetType {
-    //   const petTypeKeys = Object.keys(petTypes);
-    //   const randomKey = petTypeKeys[Math.floor(Math.random() * petTypeKeys.length)];
-    //   return petTypes[randomKey];
-    // }
-
-    function getPetTypeFromHash(name: string): PetType {
-      const hashCode = name.hashCode();
-
-      const petTypesArr = Object.values(petTypes)
-      const petIndex = Math.abs(hashCode) % petTypesArr.length
-
-      return petTypesArr[petIndex]
-    }
+    pets = [];
 
     function calculateSize(aspectRatio: number, sizeScalar: number) {
       const ratioPetSize = petSize * aspectRatio;
@@ -130,7 +323,6 @@ tableau.extensions.initializeAsync({ configure: openConfig }).then(() => {
 
       return lerp(minSize, maxSize, sizeScalar)
     }
-
 
     function getPetDimensions(dataPoint: DataPoint, type: PetType): Vec2 {
       let sizeScalar = 0;
@@ -159,16 +351,6 @@ tableau.extensions.initializeAsync({ configure: openConfig }).then(() => {
 
     function getNameFromDataPoint(dataPoint: DataPoint): string {
       return Object.values(dataPoint).map((value, i) => dataPointIndexToIsDimensionMap[i] ? value.formattedValue : "").filter(Boolean).join(nameSplitCharacter);
-    }
-
-    function getFormattedFromDataPoint(dataPoint: DataPoint, key: string): string | null {
-      if (!key) {
-        return null;
-      }
-
-      let targetValue = dataPoint?.[key].formattedValue ?? null
-
-      return targetValue
     }
 
     function getNumberFromDataPoint(dataPoint: DataPoint, key: string): number | null {
@@ -213,7 +395,6 @@ tableau.extensions.initializeAsync({ configure: openConfig }).then(() => {
         dataPoint,
         name: name,
         position: petPosition,
-        startPosition: Object.assign({}, petPosition),
         dimensions,
         speed: petType.speed,
         canFly: petType.canFly,
@@ -235,22 +416,6 @@ tableau.extensions.initializeAsync({ configure: openConfig }).then(() => {
       };
 
       return pet;
-    }
-
-    function getInitialPetPosition(): Vec2 {
-      if (useYcoords) {
-        return { x: Math.random() * canvas.width, y: Math.random() * canvas.height };
-      } else {
-        return { x: Math.random() * canvas.width, y: canvas.height };
-      }
-    }
-
-    function createBall(position: Vec2, velocity: Vec2 = { x: 0, y: 0 }): Ball {
-      return {
-        position,
-        velocity,
-        frozen: true
-      }
     }
 
     const minSpeed = 0.5;
@@ -327,32 +492,6 @@ tableau.extensions.initializeAsync({ configure: openConfig }).then(() => {
       pets.push(pet);
     });
 
-    function getTooltipMessage(pet: Pet): string {
-      let message = ""
-      if (pet.eggCompletion < 1) {
-        if (Math.random() > 0.5) {
-          message = `I am ${Math.round(pet.eggCompletion * 100)}% hatched`
-        } else {
-          const targetValue = getFormattedFromDataPoint(pet.dataPoint, targetMeasure) ?? ""
-          if (targetValue && removeAgg(sizeMeasure)) {
-            message = `My ${removeAgg(sizeMeasure)} target is ${targetValue}`
-          }
-        }
-      } else {
-        if (Math.random() > 0.5) {
-          const dimension = sizeMeasure
-          const value = getFormattedFromDataPoint(pet.dataPoint, sizeMeasure)
-          if (value) {
-            message = `My ${removeAgg(dimension)} is ${value}`
-          }
-        }
-        if (!message) {
-          message = messages[Math.floor(Math.random() * messages.length)];
-        }
-      }
-      return message
-    }
-
     function updatePet(pet: Pet, deltaTime: number) {
       if (pet.selected) {
         // Stop movement if selected
@@ -426,7 +565,7 @@ tableau.extensions.initializeAsync({ configure: openConfig }).then(() => {
             y: ball?.position.y - (pet.position.y + settings.displaySettings.petSizePixels / 2)
           }
           if (Math.sqrt(dirToBall.x ** 2 + dirToBall.y ** 2) < settings.ballSettings.ballSize / 2) {
-            ball = undefined
+            ball = null
             pet.state = 'sit'
           } else {
             if (useYcoords) {
@@ -620,146 +759,6 @@ tableau.extensions.initializeAsync({ configure: openConfig }).then(() => {
 
       requestAnimationFrame(gameLoop);
     }
-
-    let lastUpdateTime = Date.now();
-    canvas.addEventListener('mousemove',
-      immediateThenDebounce((e) => {
-        const rect = canvas.getBoundingClientRect();
-        const mouseX = e.clientX - rect.left;
-        const mouseY = e.clientY - rect.top;
-        const didDrawTooltip = pets.some((pet, index) => {
-          let tooltipAlreadyActive = !!pet.hover;
-          pet.hover = mouseX >= pet.position.x && mouseX <= pet.position.x + pet.dimensions.x && mouseY >= pet.position.y && mouseY <= pet.position.y + pet.dimensions.y;
-
-          if (pet.hover) {
-            canvas.style.cursor = 'pointer';
-            if (!tooltipAlreadyActive) {
-              const myHoveredTuple = index + 1;
-              window?.tableau?.extensions?.worksheetContent?.worksheet.hoverTupleAsync(myHoveredTuple, {
-                tooltipAnchorPoint: { x: mouseX, y: mouseY + 100 },
-              });
-            }
-
-            return true;
-          }
-        });
-
-        if (!didDrawTooltip) {
-          // If we get here the cursor is not on a pet so we can remove the tooltip
-          canvas.style.cursor = 'default';
-          window?.tableau?.extensions?.worksheetContent?.worksheet.hoverTupleAsync(99999999999, {
-            tooltipAnchorPoint: { x: mouseX, y: mouseY + 100 },
-          });
-        }
-      }, 25)
-    );
-
-    canvas.addEventListener('mouseleave', () => {
-      pets.forEach((pet) => (pet.hover = false));
-    });
-
-    canvas.addEventListener('mousedown', (e) => {
-      e.preventDefault()
-      const rect = canvas.getBoundingClientRect();
-      const click: Vec2 = {
-        x: e.clientX - rect.left,
-        y: e.clientY - rect.top
-      }
-      if (settings.ballSettings.enableBall) {
-        throwBall(click, e.timeStamp)
-      }
-
-      pets.map((pet) => {
-        // Check if the click is within the pet's bounding box
-        if (click.x >= pet.position.x && click.x <= pet.position.x + pet.dimensions.x && click.y >= pet.position.y && click.y <= pet.position.y + pet.dimensions.y) {
-          pet.selected = !pet.selected; // Toggle selection
-        }
-        return pet
-      });
-
-      const marksToSelect: Record<string, Set<any>> = {}
-      pets.filter(s => s.selected).forEach(({ dataPoint }) => {
-        Object.entries(dataPoint).forEach(([k, v]) => {
-          if (k === sizeMeasure || k === targetMeasure) {
-            return
-          }
-
-          if (!marksToSelect[k]) {
-            marksToSelect[k] = new Set()
-          }
-
-          marksToSelect[k].add(v.value)
-        })
-      })
-
-      if (Object.keys(marksToSelect).length > 0) {
-        const marks = Object.entries(marksToSelect).map(([k, v]) => {
-          return { fieldName: k, value: Array.from(v) }
-        })
-
-        worksheet.selectMarksByValueAsync(marks, window.tableau.SelectionUpdateType.Replace);
-      } else {
-        clearSelection()
-      }
-    });
-
-    function throwBall(startPos: Vec2, startTime: number) {
-      if (ball) {
-        ball.frozen = true
-      }
-      canvas.onmouseup = (e) => {
-        e.preventDefault()
-        canvas.onmouseup = null
-        canvas.onmousemove = null
-        if (!ball) {
-          return
-        }
-        const rect = canvas.getBoundingClientRect();
-        const mousePosition: Vec2 = {
-          x: e.clientX - rect.left,
-          y: e.clientY - rect.top
-        }
-
-        const velocity: Vec2 = {
-          x: (mousePosition.x - startPos.x),
-          y: (mousePosition.y - startPos.y)
-        }
-
-        ball = createBall(mousePosition, velocity)
-        ball.frozen = false
-
-        pets.forEach(pet => {
-          if (pet.state !== 'run') {
-            pet.chaseBall = true
-            pet.state = 'run'
-          }
-        })
-      }
-
-      canvas.onmousemove = (e) => {
-        const rect = canvas.getBoundingClientRect();
-        const mousePosition: Vec2 = {
-          x: e.clientX - rect.left,
-          y: e.clientY - rect.top
-        }
-        const deltaTime = e.timeStamp - startTime
-        if (ball) {
-          ball.position = mousePosition
-          if (deltaTime > 100) {
-            startPos = mousePosition
-            startTime = e.timeStamp
-          }
-        } else if (deltaTime > 200) {
-          ball = createBall(mousePosition)
-        }
-      }
-    }
-
-    window.addEventListener("resize", () => {
-      canvas.height = window.innerHeight
-      canvas.width = window.innerWidth
-      updateDataAndRender();
-    })
 
     gameLoop();
   }

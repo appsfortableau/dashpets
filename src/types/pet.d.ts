@@ -29,7 +29,6 @@ export type Pet = {
   name: string,
   dataPoint: DataPoint,
   position: Vec2,
-  startPosition: Vec2,
   dimensions: Vec2,
   speed: PetType["speed"],
   canFly: PetType["canFly"],
