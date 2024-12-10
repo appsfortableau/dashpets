@@ -120,7 +120,7 @@ tableau.extensions.initializeAsync({ configure: openConfig }).then(() => {
 
 
   function getInitialPetPosition(): Vec2 {
-    if (useYcoords) {
+    if (enableYaxis) {
       return { x: Math.random() * canvas.width, y: Math.random() * canvas.height };
     } else {
       return { x: Math.random() * canvas.width, y: canvas.height };
@@ -172,6 +172,11 @@ tableau.extensions.initializeAsync({ configure: openConfig }).then(() => {
   canvas.addEventListener('mouseleave', () => {
     pets.forEach((pet) => (pet.hover = false));
   });
+
+  const storeDebounceIgnore = debounce((settings) => {
+    storeSettingsInTableau(settings)
+    ignoreUpdate = true;
+  }, 1000)
 
   canvas.addEventListener('mousedown', (e) => {
     e.preventDefault()
@@ -269,7 +274,7 @@ tableau.extensions.initializeAsync({ configure: openConfig }).then(() => {
       }
     }
   }
-  let useYcoords: boolean
+  let enableYaxis: boolean
   let backgroundColor: string
   let useRandomSize: boolean
   let enableBall: boolean
@@ -292,7 +297,7 @@ tableau.extensions.initializeAsync({ configure: openConfig }).then(() => {
     }
 
     const settings = getStoredTableauSettings()
-    useYcoords = settings.displaySettings.enableYAxis;
+    enableYaxis = settings.displaySettings.enableYAxis;
     backgroundColor = settings.displaySettings.backgroundColor;
     setCanvasBackground(backgroundColor);
     useRandomSize = settings.dynamicSizeSettings.enableRandomSize;
@@ -425,7 +430,7 @@ tableau.extensions.initializeAsync({ configure: openConfig }).then(() => {
     function getRandomDirection(): Vec2 {
       let dirX = 0, dirY = 0;
 
-      if (settings.displaySettings.enableYAxis) {
+      if (enableYaxis) {
         // Set the direction to a random angle
         const angle = lerp(0, 2 * Math.PI, Math.random())
 
@@ -460,8 +465,7 @@ tableau.extensions.initializeAsync({ configure: openConfig }).then(() => {
           settings.dataPointStore.measureStartValue[name] = sizeMeasureValue
         }
       })
-      storeSettingsInTableau(settings)
-      ignoreUpdate = true
+      storeDebounceIgnore(settings)
     }
 
     const sizeMeasureMinMax = {
@@ -568,7 +572,7 @@ tableau.extensions.initializeAsync({ configure: openConfig }).then(() => {
             ball = null
             pet.state = 'sit'
           } else {
-            if (useYcoords) {
+            if (enableYaxis) {
               if (dirToBall.x > 10) {
                 pet.direction.x = Math.abs(pet.direction.x)
               } else if (dirToBall.x < -10) {
@@ -591,7 +595,7 @@ tableau.extensions.initializeAsync({ configure: openConfig }).then(() => {
           }
         }
         pet.position.x += pet.speed * pet.direction.x;
-        if (useYcoords || pet.canFly) {
+        if (enableYaxis || pet.canFly) {
           pet.position.y += pet.speed * pet.direction.y;
         }
       }
@@ -604,7 +608,7 @@ tableau.extensions.initializeAsync({ configure: openConfig }).then(() => {
         pet.position.x = canvas.width - pet.dimensions.x;
         pet.direction.x = -1;
       }
-      if (useYcoords || pet.canFly) {
+      if (enableYaxis || pet.canFly) {
         if (pet.position.y <= 0) {
           pet.position.y = 0;
           pet.direction.y = 1;
@@ -652,18 +656,18 @@ tableau.extensions.initializeAsync({ configure: openConfig }).then(() => {
       }
 
       // Stop the ball when velocity is very low
-      if (Math.sqrt(ball.velocity.x ** 2 + ball.velocity.y ** 2) < (useYcoords ? 2 : 0.5)) {
+      if (Math.sqrt(ball.velocity.x ** 2 + ball.velocity.y ** 2) < (enableYaxis ? 2 : 0.5)) {
         ball.frozen = true;
         ball.velocity.x = 0;
         ball.velocity.y = 0;
-        if (!useYcoords) {
+        if (!enableYaxis) {
           ball.position.y = canvas.height - ballRad;
         }
         return;
       }
 
       // Apply gravity or friction based on `useYcoords`
-      if (!useYcoords) {
+      if (!enableYaxis) {
         ball.velocity.y += ballConst.gravity * timeMul;
       } else {
         ball.velocity.y *= 0.99; // Gradual damping for Y
