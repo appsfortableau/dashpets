@@ -76,26 +76,13 @@ tableau.extensions.initializeAsync({ configure: openConfig }).then(() => {
 
     // TODO: What if data is null?
     const data = await getSummaryDataTable(worksheet)!;
-    const selected: string[] = [];
     const pets: Pet[] = [];
     let ball: Ball | undefined
 
     function clearSelection() {
-      pets.map(element => {
-        if (element.selected) {
-          element.selected = false;
-          const selectedIndex = selected.findIndex((val) => val === element.name);
-          if (selectedIndex !== -1) {
-            selected.splice(
-              selectedIndex,
-              1
-            );
-            worksheet.selectMarksByValueAsync(
-              [{ fieldName: fields["dimension"][0], value: selected }],
-              window.tableau.SelectionUpdateType.Replace
-            );
-          }
-        }
+      pets.filter(element => element.selected).forEach(element => {
+        element.selected = false;
+        worksheet.selectMarksByValueAsync([], window.tableau.SelectionUpdateType.Replace);
       })
     }
     clearSelectionButton.addEventListener("click", clearSelection)
@@ -606,10 +593,10 @@ tableau.extensions.initializeAsync({ configure: openConfig }).then(() => {
         drawBall(ball)
       }
 
-      if (selected.length === 0) {
-        setClearSelectionButtonVisibility("hidden")
-      } else {
+      if (pets.some(pet => pet.selected)) {
         setClearSelectionButtonVisibility("visible")
+      } else {
+        setClearSelectionButtonVisibility("hidden")
       }
 
       requestAnimationFrame(gameLoop);
@@ -663,29 +650,36 @@ tableau.extensions.initializeAsync({ configure: openConfig }).then(() => {
         throwBall(click, e.timeStamp)
       }
 
-      pets.forEach((pet) => {
+      pets.map((pet) => {
         // Check if the click is within the pet's bounding box
         if (click.x >= pet.position.x && click.x <= pet.position.x + pet.dimensions.x && click.y >= pet.position.y && click.y <= pet.position.y + pet.dimensions.y) {
           pet.selected = !pet.selected; // Toggle selection
-          if (pet.selected) {
-            selected.push(pet.name);
-            worksheet.selectMarksByValueAsync(
-              [{ fieldName: fields["dimension"][0], value: selected }],
-              window.tableau.SelectionUpdateType.Replace
-            );
-          } else {
-            selected.findIndex((val) => val === pet.name);
-            selected.splice(
-              selected.findIndex((val) => val === pet.name),
-              1
-            );
-            worksheet.selectMarksByValueAsync(
-              [{ fieldName: fields["dimension"][0], value: selected }],
-              window.tableau.SelectionUpdateType.Replace
-            );
-          }
         }
+        return pet
       });
+
+      const marksToSelect: Record<string, Set<any>> = {}
+      pets.filter(s => s.selected).forEach(({ dataPoint }) => {
+        Object.entries(dataPoint).forEach(([k, v]) => {
+          if (k === sizeMeasure || k === targetMeasure) {
+            return
+          }
+
+          if (!marksToSelect[k]) {
+            marksToSelect[k] = new Set()
+          }
+
+          marksToSelect[k].add(v.value)
+        })
+      })
+
+      const marks = Object.entries(marksToSelect).map(([k, v]) => {
+        return { fieldName: k, value: Array.from(v) }
+      })
+
+      console.log(marks)
+
+      worksheet.selectMarksByValueAsync(marks, window.tableau.SelectionUpdateType.Replace);
     });
 
     function throwBall(startPos: Vec2, startTime: number) {
