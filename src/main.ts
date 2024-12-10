@@ -362,7 +362,7 @@ tableau.extensions.initializeAsync({ configure: openConfig }).then(() => {
       pet.tooltipTimer += deltaTime;
 
       const globalTooltipFactor = Math.max(1, pets.length); // Prevent division by zero
-      const tooltipChance = 0.2 / globalTooltipFactor;
+      const tooltipChance = 0.5 / globalTooltipFactor;
       // Check if it's time to show a new tooltip
       if (settings.displaySettings.enableTooltips) {
         if (pet.tooltipTimer >= pet.tooltipCooldown) {
@@ -419,7 +419,7 @@ tableau.extensions.initializeAsync({ configure: openConfig }).then(() => {
             x: ball?.position.x - (pet.position.x + settings.displaySettings.petSizePixels / 2),
             y: ball?.position.y - (pet.position.y + settings.displaySettings.petSizePixels / 2)
           }
-          if (Math.sqrt(dirToBall.x ** 2 + dirToBall.y ** 2) < settings.displaySettings.petSizePixels / 3) {
+          if (Math.sqrt(dirToBall.x ** 2 + dirToBall.y ** 2) < settings.ballSettings.ballSize / 2) {
             ball = undefined
             pet.state = 'sit'
           } else {
