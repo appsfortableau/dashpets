@@ -685,11 +685,11 @@ tableau.extensions.initializeAsync({ configure: openConfig }).then(() => {
         })
       })
 
-      const marks = Object.entries(marksToSelect).map(([k, v]) => {
-        return { fieldName: k, value: Array.from(v) }
-      })
+      if (Object.keys(marksToSelect).length > 0) {
+        const marks = Object.entries(marksToSelect).map(([k, v]) => {
+          return { fieldName: k, value: Array.from(v) }
+        })
 
-      if (marks) {
         worksheet.selectMarksByValueAsync(marks, window.tableau.SelectionUpdateType.Replace);
       }
     });
