@@ -1,7 +1,7 @@
 import './style.css';
 import messages from '@/petMessages.json' with { type: "json" };
 import '@/utils/primitives';
-import { DataPoint, Pet, PetType, Vec2 } from '@/types/pet';
+import { DataPoint, DataPointValue, Pet, PetType, Vec2 } from '@/types/pet';
 import '@/utils/tableau.extensions.1.latest.min.js';
 import { getEncodings, getSummaryDataTable, openConfig } from '@/utils/tableau/data';
 import { debounce, immediateThenDebounce } from '@/utils/debounce.js';
@@ -10,6 +10,7 @@ import { Ball, BallConstants } from './types/ball';
 import { lerp, unlerp } from '@/utils/lerp';
 import { Egg, petTypes } from '@/petTypes';
 import { clamp, isNumber } from '@/utils/primitives';
+import { removeAgg } from './utils/tableau/fieldName';
 
 tableau.extensions.initializeAsync({ configure: openConfig }).then(() => {
   function loadImage(src: string, assetFolder: string): HTMLImageElement {
@@ -30,6 +31,7 @@ tableau.extensions.initializeAsync({ configure: openConfig }).then(() => {
   const canvas = document.getElementById('gameCanvas')! as HTMLCanvasElement;
   // NOTE: Could this be null?
   const ctx = canvas.getContext('2d')!;
+  ctx.imageSmoothingEnabled = false
 
   const ballConst: BallConstants = {
     damping: 0.8,
@@ -130,7 +132,7 @@ tableau.extensions.initializeAsync({ configure: openConfig }).then(() => {
       if (useRandomSize) {
         sizeScalar = Math.random()
       } else if (sizeMeasure) {
-        const dataPointValue = dataPoint[sizeMeasure]
+        const dataPointValue = dataPoint[sizeMeasure].value
         if (typeof dataPointValue === "number") {
           sizeScalar = unlerp(sizeMeasureMinMax.min, sizeMeasureMinMax.max, dataPointValue)
         } else {
@@ -150,7 +152,17 @@ tableau.extensions.initializeAsync({ configure: openConfig }).then(() => {
     }
 
     function getNameFromDataPoint(dataPoint: DataPoint): string {
-      return Object.values(dataPoint).map((value, i) => dataPointIndexToIsDimensionMap[i] ? value : "").filter(Boolean).join(nameSplitCharacter);
+      return Object.values(dataPoint).map((value, i) => dataPointIndexToIsDimensionMap[i] ? value.formattedValue : "").filter(Boolean).join(nameSplitCharacter);
+    }
+
+    function getFormattedFromDataPoint(dataPoint: DataPoint, key: string): string | null {
+      if (!key) {
+        return null;
+      }
+
+      let targetValue = dataPoint?.[key].formattedValue ?? null
+
+      return targetValue
     }
 
     function getNumberFromDataPoint(dataPoint: DataPoint, key: string): number | null {
@@ -158,7 +170,7 @@ tableau.extensions.initializeAsync({ configure: openConfig }).then(() => {
         return null;
       }
 
-      let targetValue = dataPoint?.[key] ?? null
+      let targetValue = dataPoint?.[key].value ?? null
 
       if (isNumber(targetValue)) {
         return targetValue
@@ -264,7 +276,7 @@ tableau.extensions.initializeAsync({ configure: openConfig }).then(() => {
     // Data from tableau is not strongly typed
     // Only the dimensions are needed because they define the datapoints
     const petsData = Array.from(new Set(data?.data.map((row) => {
-      return row.map((data, i) => [dataPointIndexToFieldNameMap[i], data.value]);
+      return row.map((data, i) => [dataPointIndexToFieldNameMap[i], { value: data.value, formattedValue: data.formattedValue } as DataPointValue]);
     }) ?? [])).map(entries => Object.fromEntries(entries) as DataPoint);
 
     // If authoring update starting values of target calculation
@@ -330,7 +342,29 @@ tableau.extensions.initializeAsync({ configure: openConfig }).then(() => {
         if (pet.tooltipTimer >= pet.tooltipCooldown) {
           if (Math.random() < tooltipChance) {
             // 30% chance to say something
-            pet.tooltip = messages[Math.floor(Math.random() * messages.length)];
+            let message = ""
+            if (pet.eggCompletion < 1) {
+              if (Math.random() > 0.5) {
+                message = `I am ${Math.round(pet.eggCompletion * 100)}% hatched`
+              } else {
+                const targetValue = getFormattedFromDataPoint(pet.dataPoint, targetMeasure) ?? ""
+                if (targetValue && removeAgg(sizeMeasure)) {
+                  message = `My ${removeAgg(sizeMeasure)} target is ${targetValue}`
+                }
+              }
+            } else {
+              if (Math.random() > 0.5) {
+                const dimension = sizeMeasure
+                const value = getFormattedFromDataPoint(pet.dataPoint, sizeMeasure)
+                if (value) {
+                  message = `My ${removeAgg(dimension)} is ${value}`
+                }
+              }
+              if (!message) {
+                message = messages[Math.floor(Math.random() * messages.length)];
+              }
+            }
+            pet.tooltip = message;
           } else {
             pet.tooltip = ''; // Otherwise, clear the tooltip
           }

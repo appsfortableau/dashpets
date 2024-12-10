@@ -56,7 +56,7 @@ export const Egg: PetType = {
   asset: 'egg',
   canFly: false,
   speed: 0,
-  aspectRatio: { x: 1, y: 1 },
+  aspectRatio: { x: 0.5, y: 0.5 },
   sprites: {
     walk: ['egg_0.png'],
     run: ['egg_0.png'],

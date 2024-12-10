@@ -22,7 +22,8 @@ export type Sprites = {
 
 export type SpriteList = string[]
 
-export type DataPoint = Record<string, (boolean | string | number)>
+export type DataPointValue = { value: (boolean | string | number), formattedValue: string }
+export type DataPoint = Record<string, DataPointValue>
 
 export type Pet = {
   name: string,
