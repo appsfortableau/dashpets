@@ -38,6 +38,7 @@
         <role-type>continuous-measure</role-type>
         <role-type>discrete-measure</role-type>
       </role-spec>
+      <fields max-count="1" />
       <encoding-icon token="letter-s" />
       <tooltip>The measure that determines the size of the pets.</tooltip>
     </encoding>
@@ -50,6 +51,7 @@
         <role-type>continuous-measure</role-type>
         <role-type>discrete-measure</role-type>
       </role-spec>
+      <fields max-count="1" />
       <encoding-icon token="letter-t" />
       <tooltip>The measure that has te percent target reached (from 0 to 1, if 1 target is reached).</tooltip>
     </encoding>

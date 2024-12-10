@@ -5,7 +5,7 @@ import { DataPoint, Pet, PetType, Vec2 } from '@/types/pet';
 import '@/utils/tableau.extensions.1.latest.min.js';
 import { getEncodings, getSummaryDataTable, openConfig } from '@/utils/tableau/data';
 import { debounce, immediateThenDebounce } from '@/utils/debounce.js';
-import { getStoredTableauSettings } from '@/utils/tableau/settings';
+import { getStoredTableauSettings, storeSettingsInTableau } from '@/utils/tableau/settings';
 import { Ball, BallConstants } from './types/ball';
 import { lerp, unlerp } from '@/utils/lerp';
 import { Egg, petTypes } from '@/petTypes';
@@ -23,8 +23,8 @@ tableau.extensions.initializeAsync({ configure: openConfig }).then(() => {
   if (!worksheet) {
     return; // no worksheet
   }
+  let isAuthoring = tableau.extensions.environment.mode === 'authoring';
   const nameSplitCharacter = "🚰";
-  const eggHatchingImages = Egg.sprites.sit.map(src => loadImage(src, "egg"));
 
   const clearSelectionButton = document.getElementById("clearSelection")! as HTMLButtonElement;
   const canvas = document.getElementById('gameCanvas')! as HTMLCanvasElement;
@@ -42,10 +42,16 @@ tableau.extensions.initializeAsync({ configure: openConfig }).then(() => {
 
   const updateDataAndRender = debounce(_updateDataAndRender, 100)
 
+  let ignoreUpdate = false
+
   worksheet.addEventListener(tableau.TableauEventType.SummaryDataChanged, updateDataAndRender);
   tableau.extensions.settings.addEventListener(tableau.TableauEventType.SettingsChanged, updateDataAndRender);
 
   async function _updateDataAndRender() {
+    if (ignoreUpdate) {
+      ignoreUpdate = false
+      return
+    }
     const settings = getStoredTableauSettings()
     // set to true to use the Y axis as well
     const useYcoords = settings.displaySettings.enableYAxis;
@@ -147,12 +153,12 @@ tableau.extensions.initializeAsync({ configure: openConfig }).then(() => {
       return Object.values(dataPoint).map((value, i) => dataPointIndexToIsDimensionMap[i] ? value : "").filter(Boolean).join(nameSplitCharacter);
     }
 
-    function getTargetValue(dataPoint: DataPoint): number | null {
-      if (!targetMeasure) {
+    function getNumberFromDataPoint(dataPoint: DataPoint, key: string): number | null {
+      if (!key) {
         return null;
       }
 
-      let targetValue = dataPoint?.[targetMeasure] ?? null
+      let targetValue = dataPoint?.[key] ?? null
 
       if (isNumber(targetValue)) {
         return targetValue
@@ -163,7 +169,11 @@ tableau.extensions.initializeAsync({ configure: openConfig }).then(() => {
 
     function createPet(dataPoint: DataPoint, position: Vec2): Pet {
       const name = getNameFromDataPoint(dataPoint);
-      const eggCompletion = clamp(getTargetValue(dataPoint) ?? 1, 0, 1);
+      const targetValue = getNumberFromDataPoint(dataPoint, targetMeasure) ?? 0
+      const dimensionValue = getNumberFromDataPoint(dataPoint, sizeMeasure) ?? 0
+      const startValue = Math.min(targetValue - 1, settings.dataPointStore.measureStartValue[name])
+      const completionPercentage = unlerp(startValue ?? 0, targetValue, dimensionValue)
+      const eggCompletion = clamp(completionPercentage ?? 1, 0, 1);
       const isEgg = eggCompletion < 1;
       const petType = isEgg ? Egg : getPetTypeFromHash(name);
       const dimensions = getPetDimensions(dataPoint, petType);
@@ -175,7 +185,6 @@ tableau.extensions.initializeAsync({ configure: openConfig }).then(() => {
         sleep: petType.sprites.sleep.map((src) => loadImage(src, petType.asset)),
       }
       const eggImage = images.sleep[Math.round(lerp(0, images.sleep.length - 1, eggCompletion))];
-      console.log(eggImage, eggCompletion, lerp(0, images.sleep.length - 1, eggCompletion))
 
       const petPosition = {
         x: position.x,
@@ -191,7 +200,7 @@ tableau.extensions.initializeAsync({ configure: openConfig }).then(() => {
         speed: petType.speed,
         canFly: petType.canFly,
         animationFrame: 0,
-        state: isEgg ? 'sleep' : 'hatching',
+        state: isEgg ? 'sleep' : 'walk',
         hover: false,
         selected: false,
         direction,
@@ -258,6 +267,19 @@ tableau.extensions.initializeAsync({ configure: openConfig }).then(() => {
       return row.map((data, i) => [dataPointIndexToFieldNameMap[i], data.value]);
     }) ?? [])).map(entries => Object.fromEntries(entries) as DataPoint);
 
+    // If authoring update starting values of target calculation
+    if (isAuthoring) {
+      petsData.forEach(point => {
+        const sizeMeasureValue = getNumberFromDataPoint(point, sizeMeasure)
+        if (sizeMeasureValue) {
+          const name = getNameFromDataPoint(point)
+          settings.dataPointStore.measureStartValue[name] = sizeMeasureValue
+        }
+      })
+      storeSettingsInTableau(settings)
+      ignoreUpdate = true
+    }
+
     const sizeMeasureMinMax = {
       min: Number.MAX_SAFE_INTEGER,
       max: Number.MIN_SAFE_INTEGER
@@ -320,7 +342,7 @@ tableau.extensions.initializeAsync({ configure: openConfig }).then(() => {
       }
       pet.idleTime += deltaTime;
 
-      if (pet.idleTime > pet.idleTimeLimit && pet.state !== "hatching") {
+      if (pet.idleTime > pet.idleTimeLimit) {
         const random = Math.random();
         if (random < 0.3) {
           pet.state = 'sit';
@@ -340,19 +362,10 @@ tableau.extensions.initializeAsync({ configure: openConfig }).then(() => {
       pet.animationTimer += deltaTime;
       if (pet.animationTimer > pet.animationDelay) {
         pet.animationTimer = 0;
-        if (pet.state === "hatching") {
-          if (pet.animationFrame === eggHatchingImages.length - 1) {
-            pet.state = 'sit';
-          } else {
-            pet.animationFrame = (pet.animationFrame + 1) % eggHatchingImages.length
-            pet.currentImage = eggHatchingImages[pet.animationFrame]
-          }
-        } else {
-          // if (pet.state === 'walk' || pet.state === 'run') {
-          pet.animationFrame = (pet.animationFrame + 1) % pet.images[pet.state].length;
-          pet.currentImage = pet.images[pet.state][pet.animationFrame];
-          // }
-        }
+        // if (pet.state === 'walk' || pet.state === 'run') {
+        pet.animationFrame = (pet.animationFrame + 1) % pet.images[pet.state].length;
+        pet.currentImage = pet.images[pet.state][pet.animationFrame];
+        // }
       }
 
       if (pet.state === 'walk' || pet.state === 'run') {
@@ -447,15 +460,6 @@ tableau.extensions.initializeAsync({ configure: openConfig }).then(() => {
 
     function drawPet(pet: Pet) {
       if (pet.currentImage && pet.currentImage.complete) {
-        if (pet.state !== 'hatching') {
-          const lastHatchingImage = eggHatchingImages[eggHatchingImages.length - 1]
-          if (lastHatchingImage) {
-            ctx.drawImage(lastHatchingImage, pet.startPosition.x, pet.startPosition.y, pet.dimensions.x, pet.dimensions.y);
-          }
-        } else if (pet.eggCompletion >= 1) {
-          ctx.drawImage(pet.images.sleep[0], pet.position.x + pet.dimensions.x / 2, pet.position.y + pet.dimensions.y / 2, pet.dimensions.x / 2, pet.dimensions.y / 2);
-        }
-
         if (pet.selected) {
           // Draw a black border around the pet
           ctx.strokeStyle = 'black';

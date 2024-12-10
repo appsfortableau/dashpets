@@ -2,6 +2,7 @@ export class PetsSettings {
   public displaySettings: DisplaySettings = new DisplaySettings();
   public dynamicSizeSettings: DynamicSizeSettings = new DynamicSizeSettings();
   public ballSettings: BallSettings = new BallSettings();
+  public dataPointStore: DataPointStore = new DataPointStore()
 }
 
 export class DynamicSizeSettings {
@@ -22,4 +23,8 @@ class DisplaySettings {
 class BallSettings {
   public enableBall: boolean = true;
   public ballSize: number = 25;
+}
+
+class DataPointStore {
+  public measureStartValue: Record<string, number> = {}
 }

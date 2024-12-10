@@ -31,7 +31,7 @@ export type Pet = {
   speed: PetType["speed"],
   canFly: PetType["canFly"],
   animationFrame: number,
-  state: (keyof Sprites | "hatching"),
+  state: keyof Sprites,
   hover: boolean,
   selected: boolean,
   direction: Vec2,
