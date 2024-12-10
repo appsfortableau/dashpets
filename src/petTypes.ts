@@ -1,6 +1,6 @@
-import { PetType, Sprites } from './types/pet';
+import { PetType } from './types/pet';
 
-const dogDefaults: Omit<PetType, "asset"> = {
+const dogDefaults: Omit<PetType, 'asset'> = {
   canFly: false,
   speed: 1,
   aspectRatio: { x: 1, y: 0.84 },
@@ -23,10 +23,10 @@ const dogDefaults: Omit<PetType, "asset"> = {
       'sit2.png',
     ],
     sleep: ['sleep1.png', 'sleep2.png', 'sleep2.png', 'sleep3.png', 'sleep2.png', 'sleep2.png'],
-  }
-}
+  },
+};
 
-const catDefaults: Omit<PetType, "asset"> = {
+const catDefaults: Omit<PetType, 'asset'> = {
   canFly: false,
   speed: 1.5,
   aspectRatio: { x: 1, y: 0.84 },
@@ -48,9 +48,27 @@ const catDefaults: Omit<PetType, "asset"> = {
       'talk2.png',
       'talk2.png',
     ],
-    sleep: ['sit.png', 'sit.png', 'sit.png', 'sit.png', 'sit.png', 'sit.png', 'sit.png', 'sleep1.png', 'sleep2.png', 'sleep2.png', 'sleep2.png', 'sleep2.png', 'sleep2.png', 'sleep2.png', 'sleep2.png', 'sleep2.png', "sleep1.png"],
-  }
-}
+    sleep: [
+      'sit.png',
+      'sit.png',
+      'sit.png',
+      'sit.png',
+      'sit.png',
+      'sit.png',
+      'sit.png',
+      'sleep1.png',
+      'sleep2.png',
+      'sleep2.png',
+      'sleep2.png',
+      'sleep2.png',
+      'sleep2.png',
+      'sleep2.png',
+      'sleep2.png',
+      'sleep2.png',
+      'sleep1.png',
+    ],
+  },
+};
 
 export const Egg: PetType = {
   asset: 'egg',
@@ -63,7 +81,7 @@ export const Egg: PetType = {
     sleep: ['egg_0.png', 'egg_1.png', 'egg_2.png', 'egg_3.png', 'egg_4.png'],
     sit: ['egg_0.png', 'egg_1.png', 'egg_2.png', 'egg_3.png', 'egg_4.png'],
   },
-}
+};
 
 export const petTypes: Record<string, PetType> = {
   dog: {
@@ -80,15 +98,15 @@ export const petTypes: Record<string, PetType> = {
   },
   cat: {
     asset: 'cat',
-    ...catDefaults
+    ...catDefaults,
   },
   cat_grey: {
     asset: 'cat_grey',
-    ...catDefaults
+    ...catDefaults,
   },
   cat_orange: {
     asset: 'cat_orange',
-    ...catDefaults
+    ...catDefaults,
   },
   // chicken: {
   //   asset: 'chicken',
