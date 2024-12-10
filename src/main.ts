@@ -79,15 +79,15 @@ tableau.extensions.initializeAsync({ configure: openConfig }).then(() => {
     // TODO: What if data is null?
     const data = await getSummaryDataTable(worksheet)!;
 
- 
-    if(data && data.totalRowCount>0) {
+
+    if (data && data.totalRowCount > 0) {
       startScreen.style.display = 'none';
       canvas.style.display = 'block';
     } else {
       startScreen.style.display = 'flex';
       canvas.style.display = 'none';
     }
-    
+
     const pets: Pet[] = [];
     let ball: Ball | undefined
 
@@ -747,8 +747,9 @@ tableau.extensions.initializeAsync({ configure: openConfig }).then(() => {
     }
 
     window.addEventListener("resize", () => {
-      ctx.canvas.width = window.innerWidth
-      ctx.canvas.height = window.innerHeight
+      canvas.height = window.innerHeight
+      canvas.width = window.innerWidth
+      updateDataAndRender();
     })
 
     gameLoop();
