@@ -23,6 +23,7 @@ class DisplaySettings {
 class BallSettings {
   public enableBall: boolean = true;
   public ballSize: number = 25;
+  public ballColor: string = "#ff0079";
 }
 
 class DataPointStore {

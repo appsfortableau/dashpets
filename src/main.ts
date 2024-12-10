@@ -432,10 +432,13 @@ tableau.extensions.initializeAsync({ configure: openConfig }).then(() => {
       }
 
       // Stop the ball when velocity is very low
-      if (Math.sqrt(ball.velocity.x ** 2 + ball.velocity.y ** 2) < (useYcoords ? 2 : 4)) {
+      if (Math.sqrt(ball.velocity.x ** 2 + ball.velocity.y ** 2) < (useYcoords ? 2 : 0.5)) {
         ball.frozen = true;
         ball.velocity.x = 0;
         ball.velocity.y = 0;
+        if (!useYcoords) {
+          ball.position.y = canvas.height - ballRad;
+        }
         return;
       }
 
@@ -500,7 +503,7 @@ tableau.extensions.initializeAsync({ configure: openConfig }).then(() => {
     function drawBall(ball: Ball) {
       ctx.beginPath();
       ctx.arc(ball.position.x, ball.position.y, settings.ballSettings.ballSize / 2, 0, 2 * Math.PI, false);
-      ctx.fillStyle = '#ff0079';
+      ctx.fillStyle = settings.ballSettings.ballColor;
       ctx.fill();
     }
 
