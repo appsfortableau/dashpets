@@ -36,7 +36,7 @@
 
       #startScreen p {
         font-size: 1.2em;
-        margin-bottom: 30px;
+        margin-bottom: 20px;
         max-width: 600px;
         font-weight: bold;
         line-height: 1.5;
@@ -45,7 +45,7 @@
 
       .steps {
         text-align: left;
-        margin-top: 30px;
+        margin-top: 10px;
         font-size: 1em;
       }
 
@@ -72,10 +72,11 @@
       }
 
       .pet-images img {
-        width: 150px;
+        width: 100px;
         height: auto;
-        object-fit: cover;
+        object-fit:contain;
         border-radius: 10px;
+        padding: 20px;
         box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
       }
 
@@ -104,8 +105,9 @@
         </ul>
       </div>
       <div class="pet-images">
-        <img src="public/assets/cat_orange/talk2.png" alt="Funny Pet 1" />
+        <img src="public/assets/marks_card.png" alt="Funny Pet 1" />
         <img src="public/assets/dog_beige/sleep1.png" alt="Funny Pet 2" />
+        <img src="public/assets/cat_orange/sit.png" alt="Funny Pet 2" />
       </div>
     </div>
     <canvas id="gameCanvas" style="display: none"></canvas>
