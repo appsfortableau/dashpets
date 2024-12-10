@@ -82,7 +82,7 @@ tableau.extensions.initializeAsync({ configure: openConfig }).then(() => {
     function clearSelection() {
       pets.filter(element => element.selected).forEach(element => {
         element.selected = false;
-        worksheet.selectMarksByValueAsync([], window.tableau.SelectionUpdateType.Replace);
+        worksheet.clearSelectedMarksAsync();
       })
     }
     clearSelectionButton.addEventListener("click", clearSelection)
@@ -677,9 +677,9 @@ tableau.extensions.initializeAsync({ configure: openConfig }).then(() => {
         return { fieldName: k, value: Array.from(v) }
       })
 
-      console.log(marks)
-
-      worksheet.selectMarksByValueAsync(marks, window.tableau.SelectionUpdateType.Replace);
+      if (marks) {
+        worksheet.selectMarksByValueAsync(marks, window.tableau.SelectionUpdateType.Replace);
+      }
     });
 
     function throwBall(startPos: Vec2, startTime: number) {
@@ -733,6 +733,11 @@ tableau.extensions.initializeAsync({ configure: openConfig }).then(() => {
         }
       }
     }
+
+    window.addEventListener("resize", () => {
+      ctx.canvas.width = window.innerWidth
+      ctx.canvas.height = window.innerHeight
+    })
 
     gameLoop();
   }
