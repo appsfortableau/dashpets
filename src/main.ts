@@ -274,6 +274,9 @@ tableau.extensions.initializeAsync({ configure: openConfig }).then(() => {
       }
     }
   }
+
+  let gameLoop: () => void = () => requestAnimationFrame(gameLoop)
+
   let enableYaxis: boolean
   let backgroundColor: string
   let useRandomSize: boolean
@@ -735,7 +738,7 @@ tableau.extensions.initializeAsync({ configure: openConfig }).then(() => {
       clearSelectionButton.style.display = state === "hidden" ? "none" : "block"
     }
 
-    function gameLoop() {
+    gameLoop = () => {
       ctx.clearRect(0, 0, canvas.width, canvas.height);
       setCanvasBackground(backgroundColor)
       const currentTime = Date.now();
@@ -761,10 +764,9 @@ tableau.extensions.initializeAsync({ configure: openConfig }).then(() => {
         setClearSelectionButtonVisibility("hidden")
       }
 
-      requestAnimationFrame(gameLoop);
+      requestAnimationFrame(gameLoop)
     }
-
-    gameLoop();
   }
+  gameLoop();
   updateDataAndRender();
 });
