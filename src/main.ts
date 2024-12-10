@@ -300,7 +300,7 @@ tableau.extensions.initializeAsync({ configure: openConfig }).then(() => {
 
     if (sizeMeasure) {
       petsData.forEach(point => {
-        const sizeMeasureValue = point[sizeMeasure] ?? 0
+        const sizeMeasureValue = point[sizeMeasure].value ?? 0
         if (typeof sizeMeasureValue !== "number") {
           return
         }
