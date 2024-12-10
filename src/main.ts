@@ -381,7 +381,6 @@ tableau.extensions.initializeAsync({ configure: openConfig }).then(() => {
             x: ball?.position.x - (pet.position.x + settings.displaySettings.petSizePixels / 2),
             y: ball?.position.y - (pet.position.y + settings.displaySettings.petSizePixels / 2)
           }
-          console.log(dirToBall, pet.direction)
           if (Math.sqrt(dirToBall.x ** 2 + dirToBall.y ** 2) < settings.displaySettings.petSizePixels / 3) {
             ball = undefined
             pet.state = 'sit'
