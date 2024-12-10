@@ -29,6 +29,8 @@ tableau.extensions.initializeAsync({ configure: openConfig }).then(() => {
 
   const clearSelectionButton = document.getElementById("clearSelection")! as HTMLButtonElement;
   const canvas = document.getElementById('gameCanvas')! as HTMLCanvasElement;
+  const startScreen = document.getElementById('startScreen') as HTMLElement;
+
   // NOTE: Could this be null?
   const ctx = canvas.getContext('2d')!;
   ctx.imageSmoothingEnabled = false
@@ -76,6 +78,16 @@ tableau.extensions.initializeAsync({ configure: openConfig }).then(() => {
 
     // TODO: What if data is null?
     const data = await getSummaryDataTable(worksheet)!;
+
+ 
+    if(data && data.totalRowCount>0) {
+      startScreen.style.display = 'none';
+      canvas.style.display = 'block';
+    } else {
+      startScreen.style.display = 'flex';
+      canvas.style.display = 'none';
+    }
+    
     const pets: Pet[] = [];
     let ball: Ball | undefined
 

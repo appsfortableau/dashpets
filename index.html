@@ -4,11 +4,110 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>DashPets</title>
+    <style>
+      body,
+      html {
+        margin: 0;
+        padding: 0;
+        height: 100%;
+        font-family: 'Monocraft';
+      }
+
+      #startScreen {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background-color: #ffffff;
+        display: none;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        text-align: center;
+        z-index: 10;
+      }
+
+      #startScreen h1 {
+        font-size: 3em;
+        margin-bottom: 10px;
+        color: #ff0079;
+      }
+
+      #startScreen p {
+        font-size: 1.2em;
+        margin-bottom: 30px;
+        max-width: 600px;
+        font-weight: bold;
+        line-height: 1.5;
+        color: #333;
+      }
+
+      .steps {
+        text-align: left;
+        margin-top: 30px;
+        font-size: 1em;
+      }
+
+      .steps ul {
+        list-style: none;
+        padding: 0;
+      }
+
+      .steps ul li {
+        margin-bottom: 10px;
+      }
+
+      .steps ul li:before {
+        content: '✔';
+        color: #ff0079;
+        margin-right: 10px;
+      }
+
+      .pet-images {
+        display: flex;
+        justify-content: center;
+        gap: 20px;
+        margin: 20px 0;
+      }
+
+      .pet-images img {
+        width: 150px;
+        height: auto;
+        object-fit: cover;
+        border-radius: 10px;
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+      }
+
+      /* #gameCanvas {
+        display: none; /* Hide the game canvas until the start screen closes */
+      } */
+    </style>
   </head>
   <body>
     <div id="app"></div>
     <button id="clearSelection">Clear selection</button>
     <script type="module" src="/src/main.ts"></script>
-    <canvas id="gameCanvas"></canvas>
+    <div id="startScreen">
+      <img src="public/assets/cat/sit.png" alt="Funny Pet 1" />
+      <h1>DashPets</h1>
+      <p>
+        Transforms data into a cute cat, a happy dog or cool t-rex in your dashboard. Filter, interact, and have fun!
+      </p>
+      <div class="steps">
+        <h2>Get Started</h2>
+        <ul>
+          <li>Add any category to <b>'Pets'</b> to generate pets.</li>
+          <li>Add a measure to <b>'Size'</b> to give the pets a size (optional).</li>
+          <li>Add a measure to <b>'Target'</b> to give the pets a target (optional).</li>
+          <li>If the target is not reached, the pets will become a hatchable egg.</li>
+        </ul>
+      </div>
+      <div class="pet-images">
+        <img src="public/assets/cat_orange/talk2.png" alt="Funny Pet 1" />
+        <img src="public/assets/dog_beige/sleep1.png" alt="Funny Pet 2" />
+      </div>
+    </div>
+    <canvas id="gameCanvas" style="display: none"></canvas>
   </body>
 </html>
