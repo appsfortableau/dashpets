@@ -321,6 +321,32 @@ tableau.extensions.initializeAsync({ configure: openConfig }).then(() => {
       pets.push(pet);
     });
 
+    function getTooltipMessage(pet: Pet): string {
+      let message = ""
+      if (pet.eggCompletion < 1) {
+        if (Math.random() > 0.5) {
+          message = `I am ${Math.round(pet.eggCompletion * 100)}% hatched`
+        } else {
+          const targetValue = getFormattedFromDataPoint(pet.dataPoint, targetMeasure) ?? ""
+          if (targetValue && removeAgg(sizeMeasure)) {
+            message = `My ${removeAgg(sizeMeasure)} target is ${targetValue}`
+          }
+        }
+      } else {
+        if (Math.random() > 0.5) {
+          const dimension = sizeMeasure
+          const value = getFormattedFromDataPoint(pet.dataPoint, sizeMeasure)
+          if (value) {
+            message = `My ${removeAgg(dimension)} is ${value}`
+          }
+        }
+        if (!message) {
+          message = messages[Math.floor(Math.random() * messages.length)];
+        }
+      }
+      return message
+    }
+
     function updatePet(pet: Pet, deltaTime: number) {
       if (pet.selected) {
         // Stop movement if selected
@@ -342,29 +368,7 @@ tableau.extensions.initializeAsync({ configure: openConfig }).then(() => {
         if (pet.tooltipTimer >= pet.tooltipCooldown) {
           if (Math.random() < tooltipChance) {
             // 30% chance to say something
-            let message = ""
-            if (pet.eggCompletion < 1) {
-              if (Math.random() > 0.5) {
-                message = `I am ${Math.round(pet.eggCompletion * 100)}% hatched`
-              } else {
-                const targetValue = getFormattedFromDataPoint(pet.dataPoint, targetMeasure) ?? ""
-                if (targetValue && removeAgg(sizeMeasure)) {
-                  message = `My ${removeAgg(sizeMeasure)} target is ${targetValue}`
-                }
-              }
-            } else {
-              if (Math.random() > 0.5) {
-                const dimension = sizeMeasure
-                const value = getFormattedFromDataPoint(pet.dataPoint, sizeMeasure)
-                if (value) {
-                  message = `My ${removeAgg(dimension)} is ${value}`
-                }
-              }
-              if (!message) {
-                message = messages[Math.floor(Math.random() * messages.length)];
-              }
-            }
-            pet.tooltip = message;
+            pet.tooltip = getTooltipMessage(pet);
           } else {
             pet.tooltip = ''; // Otherwise, clear the tooltip
           }
@@ -612,7 +616,6 @@ tableau.extensions.initializeAsync({ configure: openConfig }).then(() => {
     }
 
     let lastUpdateTime = Date.now();
-
     canvas.addEventListener('mousemove',
       immediateThenDebounce((e) => {
         const rect = canvas.getBoundingClientRect();
