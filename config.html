@@ -3,7 +3,7 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Configure Tooltip Settings</title>
+    <title>DashPets Configuration</title>
     <style>
       @font-face {
         font-family: 'Monocraft';
@@ -14,8 +14,8 @@
         image-rendering: pixelated;
         font-family: Monocraft !important;
         font-weight: bold;
-        color: #DDD;
-        text-shadow: 3px 3px #000A;
+        color: #ddd;
+        text-shadow: 3px 3px #000a;
         color: white;
         padding: 0;
         margin: 0;
@@ -28,7 +28,7 @@
       .settings {
         padding: 10px;
         width: 100dvw;
-        background-color: rgba(0,0,0,0.4);
+        background-color: rgba(0, 0, 0, 0.4);
         overflow: scroll;
         padding: 10px;
         display: grid;
@@ -48,25 +48,25 @@
 
         height: 50px;
         background: #999 url('/assets/bgbtn.png') center / cover;
-	image-rendering: pixelated;
-	border: 2px solid #000;
+        image-rendering: pixelated;
+        border: 2px solid #000;
         box-shadow: 0.4rem 0.4rem 0 black;
         border: 0.1rem solid black;
         cursor: pointer;
         overflow: hidden;
         white-space: nowrap;
         user-select: none;
-        color: #DDD;
-        text-shadow: 2px 2px #000A;
-        box-shadow: inset -2px -4px #0006, inset 2px 2px #FFF7;
+        color: #ddd;
+        text-shadow: 2px 2px #000a;
+        box-shadow: inset -2px -4px #0006, inset 2px 2px #fff7;
       }
       label:active {
-        box-shadow: inset -2px -4px #0004, inset 2px 2px #FFF5;
+        box-shadow: inset -2px -4px #0004, inset 2px 2px #fff5;
       }
       label:hover {
-        background-color: rgba(100, 100, 255, .45) !important;
-        text-shadow: 2px 2px #202013CC;
-        color: #FFFFA0;
+        background-color: rgba(100, 100, 255, 0.45) !important;
+        text-shadow: 2px 2px #202013cc;
+        color: #ffffa0;
       }
       button {
         font-family: Monocraft;
@@ -83,14 +83,14 @@
         overflow: hidden;
         white-space: nowrap;
         user-select: none;
-        color: #DDD;
-        text-shadow: 2px 2px #000A;
-        box-shadow: inset -2px -4px #0006, inset 2px 2px #FFF7;
+        color: #ddd;
+        text-shadow: 2px 2px #000a;
+        box-shadow: inset -2px -4px #0006, inset 2px 2px #fff7;
       }
       button:hover {
-        background-color: rgba(100, 100, 255, .45) !important;
-        text-shadow: 2px 2px #202013CC;
-        color: #FFFFA0;
+        background-color: rgba(100, 100, 255, 0.45) !important;
+        text-shadow: 2px 2px #202013cc;
+        color: #ffffa0;
       }
       button:disabled {
         background-color: #cfcfcf;
@@ -98,18 +98,18 @@
       input[type='checkbox'] {
         display: none;
       }
-      input[type='checkbox']:checked + .status:after { 
-        content: ": ON";
+      input[type='checkbox']:checked + .status:after {
+        content: ': ON';
       }
-      input[type='checkbox']:not(:checked) + .status:after { 
-        content: ": OFF";
+      input[type='checkbox']:not(:checked) + .status:after {
+        content: ': OFF';
       }
       label > input {
-        background-color: rgba(0,0,0,0.4);
+        background-color: rgba(0, 0, 0, 0.4);
         margin: 0 10px;
         width: 3em;
         color: white;
-        text-align:center;
+        text-align: center;
         font-family: Monocraft;
         font-size: 18px;
       }
@@ -120,7 +120,7 @@
         margin: 0;
       }
       /* Firefox */
-      input[type=number] {
+      input[type='number'] {
         -moz-appearance: textfield;
       }
       .footer {
@@ -133,15 +133,27 @@
     </style>
   </head>
   <body>
-    <h1> Settings </h1>
+    <h1>Settings</h1>
     <div class="settings">
-      <label>Enable Tooltips<input type="checkbox" id="enableTooltips" /><p class="status"></p></label>
-      <label>Enable Y axis for pets<input type="checkbox" id="enableYAxis" /><p class="status"></p></label>
-      <label>Enable random size<input type="checkbox" id="enableRandomSize" /><p class="status"></p></label>
+      <label
+        >Enable Tooltips<input type="checkbox" id="enableTooltips" />
+        <p class="status"></p
+      ></label>
+      <label
+        >Enable Y axis for pets<input type="checkbox" id="enableYAxis" />
+        <p class="status"></p
+      ></label>
+      <label
+        >Enable random size<input type="checkbox" id="enableRandomSize" />
+        <p class="status"></p
+      ></label>
       <label>Pet size<input type="number" id="petSizePixels" />px</label>
       <label>Minimum pet scalar<input type="number" id="minSizePercent" />%</label>
       <label>Maximum pet scalar<input type="number" min="1" max="500" value="100" id="maxSizePercent" />%</label>
-      <label>Enable throwable ball<input type="checkbox" id="enableBall" /><p class="status"></p></label>
+      <label
+        >Enable throwable ball<input type="checkbox" id="enableBall" />
+        <p class="status"></p
+      ></label>
       <label>Ball size<input type="number" id="ballSize" />px</label>
       <label for="backgroundColor">
         Background Color:
