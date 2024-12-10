@@ -314,6 +314,12 @@ tableau.extensions.initializeAsync({ configure: openConfig }).then(() => {
         // Stop movement if selected
         return;
       }
+
+      if (pet.chaseBall && ball === undefined) {
+        pet.chaseBall = false
+        pet.state = 'sit'
+      }
+
       // Tooltip logic
       pet.tooltipTimer += deltaTime;
 
@@ -343,7 +349,7 @@ tableau.extensions.initializeAsync({ configure: openConfig }).then(() => {
       }
       pet.idleTime += deltaTime;
 
-      if (pet.idleTime > pet.idleTimeLimit) {
+      if (pet.idleTime > pet.idleTimeLimit && !pet.chaseBall) {
         const random = Math.random();
         if (random < 0.3) {
           pet.state = 'sit';
@@ -370,6 +376,38 @@ tableau.extensions.initializeAsync({ configure: openConfig }).then(() => {
       }
 
       if (pet.state === 'walk' || pet.state === 'run') {
+        if (pet.chaseBall) {
+          const dirToBall: Vec2 = {
+            x: ball?.position.x - (pet.position.x + settings.displaySettings.petSizePixels / 2),
+            y: ball?.position.y - (pet.position.y + settings.displaySettings.petSizePixels / 2)
+          }
+          console.log(dirToBall, pet.direction)
+          if (Math.sqrt(dirToBall.x ** 2 + dirToBall.y ** 2) < settings.displaySettings.petSizePixels / 3) {
+            ball = undefined
+            pet.state = 'sit'
+          } else {
+            if (useYcoords) {
+              if (dirToBall.x > 10) {
+                pet.direction.x = Math.abs(pet.direction.x)
+              } else if (dirToBall.x < -10) {
+                pet.direction.x = -Math.abs(pet.direction.x)
+              }
+              if (dirToBall.y > 10) {
+                pet.direction.y = Math.abs(pet.direction.y)
+              } else if (dirToBall.y < -10) {
+                pet.direction.y = -Math.abs(pet.direction.y)
+              }
+            } else {
+              if (dirToBall.x > 5) {
+                pet.direction.x = Math.abs(pet.direction.x)
+                pet.direction.y = Math.abs(pet.direction.y)
+              } else if (dirToBall.x < -5) {
+                pet.direction.x = -Math.abs(pet.direction.x)
+                pet.direction.y = -Math.abs(pet.direction.y)
+              }
+            }
+          }
+        }
         pet.position.x += pet.speed * pet.direction.x;
         if (useYcoords || pet.canFly) {
           pet.position.y += pet.speed * pet.direction.y;
@@ -638,6 +676,13 @@ tableau.extensions.initializeAsync({ configure: openConfig }).then(() => {
 
         ball = createBall(mousePosition, velocity)
         ball.frozen = false
+
+        pets.forEach(pet => {
+          if (pet.state !== 'run') {
+            pet.chaseBall = true
+            pet.state = 'run'
+          }
+        })
       }
 
       canvas.onmousemove = (e) => {

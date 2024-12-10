@@ -1,3 +1,5 @@
+import { Ball } from "./ball"
+
 export type PetType = {
   asset: string,
   canFly: boolean,
@@ -47,4 +49,5 @@ export type Pet = {
   tooltipTimer: number,
   tooltipCooldown: number,
   eggCompletion: number,
+  chaseBall?: boolean,
 }
