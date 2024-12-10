@@ -13,10 +13,17 @@ import { clamp, isNumber } from '@/utils/primitives';
 import { removeAgg } from './utils/tableau/fieldName';
 
 tableau.extensions.initializeAsync({ configure: openConfig }).then(() => {
+  const imageMap: Record<string, HTMLImageElement> = {}
   function loadImage(src: string, assetFolder: string): HTMLImageElement {
+    const imagePath = 'assets/' + assetFolder + '/' + src
+    const cachedImage = imageMap[imagePath]
+    if (cachedImage) {
+      return cachedImage
+    }
     const img = new Image();
     // TODO resolve correct folder for the pet.
-    img.src = 'assets/' + assetFolder + '/' + src;
+    img.src = imagePath
+    imageMap[imagePath] = img
     return img;
   }
 
