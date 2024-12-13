@@ -202,6 +202,9 @@ tableau.extensions.initializeAsync({ configure: openConfig }).then(() => {
     const marksToSelect: Record<string, Set<any>> = {}
     pets.filter(s => s.selected).forEach(({ dataPoint }) => {
       Object.entries(dataPoint).forEach(([k, v]) => {
+        if (typeof Number(v.value) === "number" && isNumber(v.value)) {
+          return
+        }
         if (k === sizeMeasure || k === targetMeasure) {
           return
         }
