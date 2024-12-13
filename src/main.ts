@@ -41,8 +41,6 @@ tableau.extensions.initializeAsync({ configure: openConfig }).then(() => {
   const canvas = document.getElementById('gameCanvas')! as HTMLCanvasElement;
   const startScreen = document.getElementById('startScreen') as HTMLElement;
 
-  startScreen.style.display = 'none';
-
   // NOTE: Could this be null?
   const ctx = canvas.getContext('2d')!;
   ctx.imageSmoothingEnabled = false
