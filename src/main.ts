@@ -1,4 +1,4 @@
-import './style.css';
+import './styles/app.css';
 import messages from '@/petMessages.json' with { type: "json" };
 import '@/utils/primitives';
 import { DataPoint, DataPointValue, Pet, PetType, Vec2 } from '@/types/pet';
@@ -12,9 +12,11 @@ import { Egg, petTypes } from '@/petTypes';
 import { clamp, isNumber } from '@/utils/primitives';
 import { removeAgg } from './utils/tableau/fieldName';
 import { DataTable } from '@tableau/extensions-api-types';
+import { fallbackNoInTableau } from './utils/shared';
 
 tableau.extensions.initializeAsync({ configure: openConfig }).then(() => {
   const imageMap: Record<string, HTMLImageElement> = {}
+
   function loadImage(src: string, assetFolder: string): HTMLImageElement {
     const imagePath = 'assets/' + assetFolder + '/' + src
     const cachedImage = imageMap[imagePath]
@@ -769,4 +771,5 @@ tableau.extensions.initializeAsync({ configure: openConfig }).then(() => {
   }
   gameLoop();
   updateDataAndRender();
-});
+})
+.catch(fallbackNoInTableau);
