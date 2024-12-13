@@ -70,6 +70,18 @@ const catDefaults: Omit<PetType, 'asset'> = {
   },
 };
 
+const vizzyDefaults: Omit<PetType, 'asset'> = {
+  canFly: false,
+  speed: 1,
+  aspectRatio: { x: 0.86, y: 1 },
+  sprites: {
+    walk: ['walk_1.png', 'walk_2.png', 'walk_3.png'],
+    run: ['walk_1.png', 'walk_2.png', 'walk_3.png'],
+    sit: ['stand_1.png'],
+    sleep: ['stand_1.png'],
+  },
+};
+
 export const Egg: PetType = {
   asset: 'egg',
   canFly: false,
@@ -107,5 +119,9 @@ export const petTypes: Record<string, PetType> = {
   cat_orange: {
     asset: 'cat_orange',
     ...catDefaults,
+  },
+  vizzy: {
+    asset: 'vizzy',
+    ...vizzyDefaults,
   },
 } as const;
