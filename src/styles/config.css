@@ -1,0 +1,125 @@
+@font-face {
+    font-family: 'Monocraft';
+    src: url('/assets/fonts/monocraft.otf') format('opentype');
+}
+body {
+    background: #fff url('/assets/bgbtn.png') center/70%;
+    image-rendering: pixelated;
+    font-family: Monocraft !important;
+    font-weight: bold;
+    color: #ddd;
+    text-shadow: 3px 3px #000a;
+    color: white;
+    padding: 0;
+    margin: 0;
+    overflow: hidden;
+    user-select: none;
+}
+h1 {
+    text-align: center;
+}
+.settings {
+    padding: 10px;
+    width: 100dvw;
+    background-color: rgba(0, 0, 0, 0.4);
+    overflow: scroll;
+    padding: 10px;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    grid-template-rows: repeat(6, 50px);
+    gap: 30px;
+}
+label {
+    font-size: 18px;
+    text-align: center;
+    display: flex;
+    justify-items: end;
+    flex-direction: row;
+    justify-content: center;
+    align-items: center;
+    flex-grow: 1;
+
+    height: 50px;
+    background: #999 url('/assets/bgbtn.png') center / cover;
+    image-rendering: pixelated;
+    border: 2px solid #000;
+    box-shadow: 0.4rem 0.4rem 0 black;
+    border: 0.1rem solid black;
+    cursor: pointer;
+    overflow: hidden;
+    white-space: nowrap;
+    user-select: none;
+    color: #ddd;
+    text-shadow: 2px 2px #000a;
+    box-shadow: inset -2px -4px #0006, inset 2px 2px #fff7;
+}
+label:active {
+    box-shadow: inset -2px -4px #0004, inset 2px 2px #fff5;
+}
+label:hover {
+    background-color: rgba(100, 100, 255, 0.45) !important;
+    text-shadow: 2px 2px #202013cc;
+    color: #ffffa0;
+}
+button {
+    font-family: Monocraft;
+    font-size: 18px;
+    text-align: center;
+
+    height: 50px;
+    background: #999 url('/assets/bgbtn.png') center / cover;
+    image-rendering: pixelated;
+    border: 2px solid #000;
+    box-shadow: 0.4rem 0.4rem 0 black;
+    border: 0.1rem solid black;
+    cursor: pointer;
+    overflow: hidden;
+    white-space: nowrap;
+    user-select: none;
+    color: #ddd;
+    text-shadow: 2px 2px #000a;
+    box-shadow: inset -2px -4px #0006, inset 2px 2px #fff7;
+}
+button:hover {
+    background-color: rgba(100, 100, 255, 0.45) !important;
+    text-shadow: 2px 2px #202013cc;
+    color: #ffffa0;
+}
+button:disabled {
+    background-color: #cfcfcf;
+}
+input[type='checkbox'] {
+    display: none;
+}
+input[type='checkbox']:checked + .status:after {
+    content: ': ON';
+}
+input[type='checkbox']:not(:checked) + .status:after {
+    content: ': OFF';
+}
+label > input {
+    background-color: rgba(0, 0, 0, 0.4);
+    margin: 0 10px;
+    width: 3em;
+    color: white;
+    text-align: center;
+    font-family: Monocraft;
+    font-size: 18px;
+}
+/* Chrome, Safari, Edge, Opera */
+input::-webkit-outer-spin-button,
+input::-webkit-inner-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+}
+/* Firefox */
+input[type='number'] {
+    -moz-appearance: textfield;
+}
+.footer {
+    grid-row-end: -1;
+    grid-column-end: span 2;
+    display: grid;
+    width: 75%;
+    justify-self: center;
+}

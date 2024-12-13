@@ -1,4 +1,4 @@
-import './style.css';
+import './styles/style.css';
 import messages from '@/petMessages.json' with { type: "json" };
 import '@/utils/primitives';
 import { DataPoint, DataPointValue, Pet, PetType, Vec2 } from '@/types/pet';
