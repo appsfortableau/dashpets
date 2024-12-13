@@ -2,6 +2,7 @@ import './styles/config.css';
 import '@/utils/tableau.extensions.1.latest.min.js';
 import { getStoredTableauSettings, storeSettingsInTableau } from '@/utils/tableau/settings.js';
 import { PetsSettings } from './settings';
+import { fallbackNoInTableau } from './utils/shared';
 
 document.addEventListener('DOMContentLoaded', () => {
     const saveButton = document.getElementById('saveButton') as HTMLButtonElement;
@@ -19,7 +20,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 tableau.extensions.ui.closeDialog('Settings Saved');
             });
         });
-    });
+    }).catch(fallbackNoInTableau);
 });
 
 function forAllSettingsElements(func: (el: HTMLElement, group: string, key: string, defaultValue: any) => void) {
