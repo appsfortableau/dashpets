@@ -53,7 +53,7 @@
       </role-spec>
       <fields max-count="1" />
       <encoding-icon token="letter-t" />
-      <tooltip>The measure that has te percent target reached (from 0 to 1, if 1 target is reached).</tooltip>
+      <tooltip>The measure that determines the target.</tooltip>
     </encoding>
   </worksheet-extension>
   <resources>

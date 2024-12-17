@@ -77,8 +77,8 @@ const vizzyDefaults: Omit<PetType, 'asset'> = {
   sprites: {
     walk: ['walk_1.png', 'walk_2.png', 'walk_3.png'],
     run: ['walk_1.png', 'walk_2.png', 'walk_3.png'],
-    sit: ['stand_1.png', 'love_1.png', 'love_2.png', 'love_1.png', 'stand_1.png'],
-    sleep: ['stand_1.png', 'sleep_1.png', 'sleep_2.png', 'sleep_1.png', 'sleep_2.png', 'sleep_1.png'],
+    sit: ['standing.png', 'love_1.png', 'love_2.png', 'love_3.png', 'love_3.png', 'love_2.png', 'love_1.png', 'standing.png'],
+    sleep: ['sleep_1.png', 'sleep_1.png', 'sleep_2.png', 'sleep_2.png', 'sleep_2.png', 'sleep_1.png'],
   },
 };
 
