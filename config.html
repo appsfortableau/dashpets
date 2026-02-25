@@ -7,32 +7,84 @@
   </head>
   <body>
     <h1>Settings</h1>
+    <p class="settings-help">
+      Hover a setting label to see what it does.
+    </p>
     <div class="settings">
+      <input type="hidden" id="layoutMode" value="free" />
       <label
+        title="Shows random speech bubbles from pets and enables Tableau hover tooltip behavior."
         >Enable Tooltips<input type="checkbox" id="enableTooltips" />
         <p class="status"></p
       ></label>
       <label
+        title="Allows pets to move vertically. When disabled, pets stay on the ground line."
         >Enable Y axis for pets<input type="checkbox" id="enableYAxis" />
         <p class="status"></p
       ></label>
       <label
+        title="Uses random size scaling instead of the mapped Tableau size measure."
         >Enable random size<input type="checkbox" id="enableRandomSize" />
         <p class="status"></p
       ></label>
-      <label>Pet size<input type="number" id="petSizePixels" />px</label>
-      <label>Minimum pet scalar<input type="number" id="minSizePercent" />%</label>
-      <label>Maximum pet scalar<input type="number" min="1" max="500" value="100" id="maxSizePercent" />%</label>
       <label
+        title="Always draw each pet's data-point name near the sprite."
+        >Show pet names<input type="checkbox" id="showPetName" />
+        <p class="status"></p
+      ></label>
+      <label title="Where pet names are drawn when name labels are enabled.">
+        Pet name position
+        <select id="petNamePosition">
+          <option value="above">Above</option>
+          <option value="below">Below</option>
+        </select>
+      </label>
+      <label title="Base size of pets in pixels before dynamic scaling is applied.">Pet size<input type="number" id="petSizePixels" />px</label>
+      <label title="Minimum size percentage used for dynamic/random pet scaling.">Minimum pet scalar<input type="number" id="minSizePercent" />%</label>
+      <label title="Maximum size percentage used for dynamic/random pet scaling.">Maximum pet scalar<input type="number" min="1" max="500" value="100" id="maxSizePercent" />%</label>
+      <label
+        title="Lets users drag and throw a ball that pets can chase."
         >Enable throwable ball<input type="checkbox" id="enableBall" />
         <p class="status"></p
       ></label>
-      <label>Ball size<input type="number" id="ballSize" />px</label>
+      <label title="Diameter of the throwable ball in pixels.">Ball size<input type="number" id="ballSize" />px</label>
+      <label title="Scales overall pet movement speed up or down.">Speed multiplier<input type="number" id="speedMultiplier" step="0.1" min="0.2" max="5" /></label>
+      <label title="How smoothly pets steer. Higher values feel more gliding; lower values feel snappier.">Movement smoothness<input type="number" id="movementSmoothness" min="1" max="100" />%</label>
+      <label
+        title="Pets keep a bit of personal space and avoid stacking on top of each other."
+        >Enable social spacing<input type="checkbox" id="enableSocialSpacing" />
+        <p class="status"></p
+      ></label>
+      <label title="Distance in pixels pets try to keep between each other.">Social spacing distance<input type="number" id="socialSpacingPixels" min="10" max="400" />px</label>
+      <label
+        title="Pets occasionally pick random destinations to explore."
+        >Enable curiosity roaming<input type="checkbox" id="enableCuriosity" />
+        <p class="status"></p
+      ></label>
+      <label title="Chance per second that a pet starts roaming to a new point.">Curiosity chance<input type="number" id="curiosityChancePercent" min="0" max="100" />%</label>
+      <label
+        title="Pets occasionally do short high-speed bursts."
+        >Enable zoomies<input type="checkbox" id="enableZoomies" />
+        <p class="status"></p
+      ></label>
+      <label title="Chance per second that a pet enters a zoomies burst.">Zoomies chance<input type="number" id="zoomiesChancePercent" min="0" max="100" />%</label>
+      <label
+        title="Pets are attracted toward your mouse cursor when nearby."
+        >Enable cursor attraction<input type="checkbox" id="enableCursorAttraction" />
+        <p class="status"></p
+      ></label>
+      <label title="Distance from cursor where attraction starts affecting pet movement.">Cursor attraction radius<input type="number" id="cursorAttractRadius" min="10" max="600" />px</label>
+      <label
+        title="Draws ghosted after-images behind moving pets for a motion effect."
+        >Enable motion trails<input type="checkbox" id="enableTrails" />
+        <p class="status"></p
+      ></label>
+      <label title="How many after-images are shown when trails are enabled.">Trail length<input type="number" id="trailLength" min="1" max="20" /></label>
       <label for="backgroundColor">
         Background Color:
         <input type="color" id="backgroundColor" />
       </label>
-      <label for="ballColor">
+      <label for="ballColor" title="Color of the throwable ball.">
         Ball Color:
         <input type="color" id="ballColor" />
       </label>

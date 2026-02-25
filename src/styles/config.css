@@ -12,11 +12,23 @@ body {
     color: white;
     padding: 0;
     margin: 0;
-    overflow: hidden;
+    overflow: auto;
     user-select: none;
+    height: 100vh;
+    display: flex;
+    flex-direction: column;
 }
 h1 {
     text-align: center;
+    margin: 12px 0;
+    flex: 0 0 auto;
+}
+.settings-help {
+    text-align: center;
+    margin: 0 0 10px;
+    color: #fff;
+    text-shadow: 2px 2px #000a;
+    font-size: 14px;
 }
 .msg-container {
     max-width: 60%;
@@ -29,12 +41,16 @@ h1 {
 }
 .settings {
     width: 100dvw;
+    flex: 1 1 auto;
+    min-height: 0;
     background-color: rgba(0, 0, 0, 0.4);
-    overflow: auto;
+    overflow-y: auto;
+    overflow-x: hidden;
     padding: 10px;
+    box-sizing: border-box;
     display: grid;
     grid-template-columns: 1fr 1fr;
-    grid-template-rows: repeat(6, 50px);
+    grid-auto-rows: 50px;
     gap: 30px;
 }
 label {
@@ -113,6 +129,16 @@ label > input {
     text-align: center;
     font-family: Monocraft;
     font-size: 18px;
+}
+label > select {
+    background-color: rgba(0, 0, 0, 0.4);
+    margin: 0 10px;
+    width: 5.2em;
+    color: white;
+    text-align: center;
+    font-family: Monocraft;
+    font-size: 14px;
+    border: 1px solid #000;
 }
 /* Chrome, Safari, Edge, Opera */
 input::-webkit-outer-spin-button,
